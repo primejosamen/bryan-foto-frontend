@@ -185,32 +185,35 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
       <Logo3D />
 
       {/* NAV fijo */}
-      <div
-        style={{
-          position: 'fixed',
-          left: slotsBlockWidth + NAV_GAP,
-          right: 0,
-          bottom: NAV_BOTTOM,
-          zIndex: 9999,
-          pointerEvents: 'auto',
-          paddingRight: 58,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            gap: 40,
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            marginBottom: 10,
-          }}
-        >
-          <HomeNavLink href="/about">About</HomeNavLink>
-          <HomeNavLink href="/contacto">Contact</HomeNavLink>
-        </div>
-
-        <div style={{ height: 10, background: '#ff0000', width: '100%' }} />
-      </div>
+<div
+  style={{
+    position: 'fixed',
+    left: slotsBlockWidth + NAV_GAP,
+    right: 0,
+    bottom: NAV_BOTTOM,
+    zIndex: 9999,
+    pointerEvents: 'auto',
+    paddingRight: 0,
+  }}
+>
+  <div
+    style={{
+      height: 14,
+      background: '#ff0000',
+      width: '100%',
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      paddingRight: 8,
+      gap: 80,
+      overflow: 'visible',
+    }}
+  >
+    <HomeNavLink href="/about">About</HomeNavLink>
+    <HomeNavLink href="/contacto">Contact</HomeNavLink>
+  </div>
+</div>
 
       <div className="sticky top-0 h-screen bg-white">
         {/* HEADER */}
@@ -480,27 +483,20 @@ function HomeNavLink({ href, children }: { href: string; children: React.ReactNo
     <Link
       href={href}
       style={{
-        position: 'relative',
         display: 'inline-flex',
         alignItems: 'center',
         fontFamily: 'IBM Plex Sans, sans-serif',
         fontSize: 16,
         fontWeight: 600,
         color: '#ffffff',
+        textDecoration: 'none',
+        lineHeight: 1,
+        padding: '2px 0',
+        position: 'relative',
+        zIndex: 1,
       }}
     >
-      <span
-        style={{
-          position: 'absolute',
-          left: -12,
-          right: -12,
-          top: -8,
-          bottom: -8,
-          background: '#ff0000',
-          pointerEvents: 'none',
-        }}
-      />
-      <span style={{ position: 'relative', zIndex: 1 }}>{children}</span>
+      {children}
     </Link>
   );
 }

@@ -1,15 +1,16 @@
-// src/app/about/page.tsx
+/**
+ * About page — split layout with 3D logo and content.
+ *
+ * @module app/about
+ */
 import AboutSection from '@/components/about/AboutSection';
 import { getAbout } from '@/lib/api';
+import { REVALIDATE_INTERVAL } from '@/config/constants';
 
 export default async function AboutPage() {
   const about = await getAbout();
 
-  return (
-    <div className="pt-24">
-      <AboutSection about={about} />
-    </div>
-  );
+  return <AboutSection about={about} />;
 }
 
 export const metadata = {
@@ -17,4 +18,4 @@ export const metadata = {
   description: 'Conoce más sobre Bryan Photography',
 };
 
-export const revalidate = 60;
+export const revalidate = REVALIDATE_INTERVAL;
