@@ -4,13 +4,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Proyecto, getStrapiImageUrl } from '@/lib/strapi';
+import type { Project } from '@/models';
+import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 
 export default function HomeWorkCard({
   proyecto,
   priority = false,
 }: {
-  proyecto: Proyecto;
+  proyecto: Project;
   priority?: boolean;
 }) {
   const [hover, setHover] = useState(false);

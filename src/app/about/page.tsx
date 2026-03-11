@@ -1,6 +1,6 @@
 // src/app/about/page.tsx
-import AboutSection from '@/components/AboutSection';
-import { getAbout } from '@/lib/strapi';
+import AboutSection from '@/components/about/AboutSection';
+import { getAbout } from '@/lib/api';
 
 export default async function AboutPage() {
   const about = await getAbout();

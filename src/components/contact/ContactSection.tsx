@@ -2,10 +2,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Contacto } from '@/lib/strapi';
+import type { ContactInfo } from '@/models';
 
 interface ContactSectionProps {
-  contacto: Contacto | null;
+  contacto: ContactInfo | null;
 }
 
 export default function ContactSection({ contacto }: ContactSectionProps) {

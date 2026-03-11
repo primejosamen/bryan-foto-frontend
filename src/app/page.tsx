@@ -1,9 +1,9 @@
 // src/app/page.tsx
-import HomeRotatingSlots from '@/components/HomeRotatingSlots';
-import { getProyectos } from '@/lib/strapi';
+import HomeRotatingSlots from '@/components/home/HomeRotatingSlots';
+import { getProjects } from '@/lib/api';
 
 export default async function HomePage() {
-  const proyectos = await getProyectos();
+  const proyectos = await getProjects();
   return <HomeRotatingSlots proyectos={proyectos} />;
 }
 

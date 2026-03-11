@@ -3,7 +3,8 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { About, getStrapiImageUrl } from '@/lib/strapi';
+import type { About } from '@/models';
+import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 
 interface AboutSectionProps {
   about: About | null;

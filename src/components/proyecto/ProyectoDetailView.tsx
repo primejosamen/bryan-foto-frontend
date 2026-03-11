@@ -10,12 +10,13 @@ import {
   useMotionValueEvent,
   AnimatePresence,
 } from 'framer-motion';
-import { Proyecto, StrapiImage, getStrapiImageUrl } from '@/lib/strapi';
-import LogoSmall3D from './LogoSmall3D';
+import type { Project, StrapiImage } from '@/models';
+import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import LogoSmall3D from '@/components/ui/LogoSmall3D';
 
 /* ───────────────────────────── props ─────────────────────────── */
 interface Props {
-  proyecto: Proyecto;
+  proyecto: Project;
 }
 
 /* ─────────── Thumbnail strip (top-left filmstrip) ────────────── */

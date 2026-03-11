@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Proyecto, getStrapiImageUrl } from '@/lib/strapi';
-import Logo3D from './Logo3D';
+import type { Project } from '@/models';
+import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import Logo3D from '@/components/ui/Logo3D';
 
 /* ═══════════════════════ MEDIDAS DEL DISEÑO ═══════════════════ */
 const SLOT_COUNT = 3;
@@ -36,11 +37,11 @@ const HOLD_WAVE_AMPLITUDE_MS = 25;
 
 /* ═══════════════════════ TIPOS ═══════════════════════════════ */
 interface Slot {
-  projects: Proyecto[];
+  projects: Project[];
 }
 
 interface Props {
-  proyectos: Proyecto[];
+  proyectos: Project[];
 }
 
 type SlotPhase = 'idle' | 'hold';
@@ -58,7 +59,7 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
 
     const result: Slot[] = [];
     for (let i = 0; i < SLOT_COUNT; i++) {
-      const slotProjects: Proyecto[] = [];
+      const slotProjects: Project[] = [];
       if (i < pool.length) slotProjects.push(pool[i]);
       if (i + SLOT_COUNT < pool.length) slotProjects.push(pool[i + SLOT_COUNT]);
       if (slotProjects.length > 0) result.push({ projects: slotProjects });

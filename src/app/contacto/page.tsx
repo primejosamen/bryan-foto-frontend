@@ -1,9 +1,9 @@
 // src/app/contacto/page.tsx
-import ContactSection from '@/components/ContactSection';
-import { getContacto } from '@/lib/strapi';
+import ContactSection from '@/components/contact/ContactSection';
+import { getContact } from '@/lib/api';
 
 export default async function ContactoPage() {
-  const contacto = await getContacto();
+  const contacto = await getContact();
 
   return (
     <div className="pt-24">
@@ -13,7 +13,7 @@ export default async function ContactoPage() {
 }
 
 export const metadata = {
-  title: 'Contacto | Bryan Photography',
+  title: 'ContactInfo | Bryan Photography',
   description: 'Ponte en contacto con Bryan Photography',
 };
 

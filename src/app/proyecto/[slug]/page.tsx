@@ -1,7 +1,7 @@
 // src/app/proyecto/[slug]/page.tsx
 import { notFound } from 'next/navigation';
-import { getProyectoBySlug, getProyectos } from '@/lib/strapi';
-import ProyectoDetailView from '@/components/ProyectoDetailView';
+import { getProjectBySlug, getProjects } from '@/lib/api';
+import ProyectoDetailView from '@/components/proyecto/ProyectoDetailView';
 
 interface ProyectoPageProps {
   params: Promise<{ slug: string }>;
@@ -9,7 +9,7 @@ interface ProyectoPageProps {
 
 export default async function ProyectoPage({ params }: ProyectoPageProps) {
   const { slug } = await params;
-  const proyecto = await getProyectoBySlug(slug);
+  const proyecto = await getProjectBySlug(slug);
 
   if (!proyecto) {
     notFound();
@@ -20,7 +20,7 @@ export default async function ProyectoPage({ params }: ProyectoPageProps) {
 
 // Generar rutas estáticas para todos los proyectos
 export async function generateStaticParams() {
-  const proyectos = await getProyectos();
+  const proyectos = await getProjects();
   
   return proyectos.map((proyecto) => ({
     slug: proyecto.slug,
@@ -30,17 +30,17 @@ export async function generateStaticParams() {
 // Metadata dinámica
 export async function generateMetadata({ params }: ProyectoPageProps) {
   const { slug } = await params;
-  const proyecto = await getProyectoBySlug(slug);
+  const proyecto = await getProjectBySlug(slug);
   
   if (!proyecto) {
     return {
-      title: 'Proyecto no encontrado',
+      title: 'Project no encontrado',
     };
   }
 
   return {
     title: `${proyecto.titulo} | Bryan Photography`,
-    description: proyecto.descripcion || `Proyecto de fotografía: ${proyecto.titulo}`,
+    description: proyecto.descripcion || `Project de fotografía: ${proyecto.titulo}`,
   };
 }
 

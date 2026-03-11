@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
-import { getGlobal } from '@/lib/strapi';
+import { getGlobalConfig } from '@/lib/api';
 
 // Tipografía IBM Plex Sans según el diseño
 const ibmPlexSans = IBM_Plex_Sans({
@@ -13,7 +13,7 @@ const ibmPlexSans = IBM_Plex_Sans({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const global = await getGlobal();
+  const global = await getGlobalConfig();
   
   return {
     title: global?.siteName || 'Bryan Photography',
@@ -26,7 +26,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const global = await getGlobal();
+  const global = await getGlobalConfig();
 
   return (
     <html lang="es" className={ibmPlexSans.variable}>

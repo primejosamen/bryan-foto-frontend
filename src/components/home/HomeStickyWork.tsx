@@ -3,13 +3,13 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Proyecto } from '@/lib/strapi';
+import type { Project } from '@/models';
 import HomeWorkCard from './HomeWorkCard';
-import Logo3D from './Logo3D';
+import Logo3D from '@/components/ui/Logo3D';
 
 
 interface Props {
-  proyectos: Proyecto[];
+  proyectos: Project[];
 }
 
 export default function HomeStickyWork({ proyectos }: Props) {

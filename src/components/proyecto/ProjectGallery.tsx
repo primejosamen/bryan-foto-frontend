@@ -3,10 +3,10 @@
 import { useRef, useLayoutEffect, useState, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import ProjectCard from './ProjectCard';
-import { Proyecto } from '@/lib/strapi';
+import type { Project } from '@/models';
 
 interface ProjectGalleryProps {
-  proyectos: Proyecto[];
+  proyectos: Project[];
 }
 
 export default function ProjectGallery({ proyectos }: ProjectGalleryProps) {

@@ -4,10 +4,11 @@ import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Proyecto, getStrapiImageUrl } from '@/lib/strapi';
+import type { Project } from '@/models';
+import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 
 interface ProjectCardProps {
-  proyecto: Proyecto;
+  proyecto: Project;
   index: number;
 }
 
