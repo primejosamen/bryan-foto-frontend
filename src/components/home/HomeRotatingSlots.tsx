@@ -12,7 +12,7 @@ import Logo3D from '@/components/ui/Logo3D';
 const SLOT_COUNT = 3;
 const SLOT_W = 472;
 const SLOT_GAP = 10;
-const HEADER_H = 270;
+const HEADER_H = 170;
 const NAV_BOTTOM = 65;
 const NAV_GAP = 10;
 
@@ -181,13 +181,13 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
   const slotsBlockWidth = SLOT_COUNT * SLOT_W + (SLOT_COUNT - 1) * SLOT_GAP;
 
   return (
-    <section className="relative bg-white text-black" style={{ height: '100vh', overflow: 'hidden' }}>
+    <section className="relative bg-white text-black" style={{ height: '100vh', overflow: 'hidden', clipPath: 'inset(0)' }}>
       <Logo3D />
 
-      {/* NAV fijo */}
+      {/* NAV — absolute dentro de la section, NO fixed */}
 <div
   style={{
-    position: 'fixed',
+    position: 'absolute',
     left: slotsBlockWidth + NAV_GAP,
     right: 0,
     bottom: NAV_BOTTOM,
@@ -405,40 +405,7 @@ function CoverSlot({
         </div>
       )}
 
-      {/* Título — solo hover */}
-      <AnimatePresence>
-        {hover && (
-          <motion.div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              zIndex: 30,
-              padding: 16,
-            }}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-          >
-            <span
-              style={{
-                display: 'inline-block',
-                fontFamily: 'var(--font-ibm-plex-sans), IBM Plex Sans, sans-serif',
-                fontSize: 16,
-                fontWeight: 600,
-                color: '#ffffff',
-                background: '#ff0000',
-                padding: '8px 12px',
-                lineHeight: 1,
-              }}
-            >
-              {activeProject.titulo}
-            </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      
 
       {/* Cursor follower */}
       <motion.div
@@ -457,20 +424,20 @@ function CoverSlot({
         transition={{ duration: 0.12, ease: 'easeOut' }}
       >
         <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            fontFamily: 'var(--font-ibm-plex-sans), IBM Plex Sans, sans-serif',
-            fontSize: 13,
-            fontWeight: 500,
-            color: '#ffffff',
-            background: 'rgba(0,0,0,0.8)',
-            padding: '6px 10px',
-            lineHeight: 1,
-            letterSpacing: '0.04em',
-          }}
+  style={{
+    display: 'inline-flex',
+    alignItems: 'center',
+    fontFamily: 'IBM Plex Sans, sans-serif',
+    fontSize: 16,
+    fontWeight: 600,
+    color: '#ffffff',
+    background: '#ff0000',
+    padding: '8px 12px',
+    lineHeight: 1,
+    letterSpacing: '0',
+  }}
         >
-          Ver proyecto →
+          {activeProject.titulo}
         </span>
       </motion.div>
     </Link>

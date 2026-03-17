@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   images: {
     unoptimized: true,
+    qualities: [100, 75],
   },
 
   turbopack: {

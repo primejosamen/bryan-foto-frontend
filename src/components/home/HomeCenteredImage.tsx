@@ -1,0 +1,54 @@
+'use client';
+
+/**
+ * Section 4 — Centered Image: aligned to the middle slot (col2) of the 3-slot grid.
+ * Grid: col1(472) | gap(10) | col2(472) | gap(10) | col3(472)
+ *
+ * @module components/home/HomeCenteredImage
+ */
+
+import Image from 'next/image';
+import type { StrapiImage } from '@/models';
+import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import ScrollReveal from './ScrollReveal';
+
+const SLOT_W = 472;
+const SLOT_GAP = 10;
+const TOTAL_W = SLOT_W * 3 + SLOT_GAP * 2; // 1436
+const LEFT_OFFSET = SLOT_W + SLOT_GAP; // 482px — start of col2
+const IMG_H = 480;
+
+interface Props {
+  image: StrapiImage;
+}
+
+export default function HomeCenteredImage({ image }: Props) {
+  return (
+    <section
+      style={{
+        width: `${TOTAL_W}px`,
+      }}
+    >
+      <ScrollReveal>
+        <div
+          style={{
+            marginLeft: `${LEFT_OFFSET}px`,
+            width: `${SLOT_W}px`,
+            height: `${IMG_H}px`,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <Image
+            src={getStrapiImageUrl(image)}
+            alt="Centered feature"
+            fill
+            style={{ objectFit: 'cover' }}
+            sizes={`${SLOT_W}px`}
+            quality={100}
+          />
+        </div>
+      </ScrollReveal>
+    </section>
+  );
+}
