@@ -40,7 +40,7 @@ export default function HomeNavLink({ href, children }: HomeNavLinkProps) {
           pointerEvents: 'none',
         }}
       />
-      <span style={{ position: 'relative', zIndex: 1 }}>{children}</span>
+      <span style={{ position: 'relative', zIndex: 1, color: COLORS.white }}>{children}</span>
     </Link>
   );
 }

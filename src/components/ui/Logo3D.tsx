@@ -1,31 +1,42 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, useCubeTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
 import vertexShader from '@/shaders/test/vertex.glsl';
 import glassFragment from '@/shaders/case/case_glass_fragment.glsl';
-
-// Estado global del mouse para parallax y orbit
-const mouseState = { x: 0, y: 0 };
-const orbitState = { 
-  isOrbiting: false, 
-  rotationY: 0, 
-  rotationX: 0,
-  lastX: 0,
-  lastY: 0
-};
+import {
+  createInputState,
+  useSceneInteraction,
+  type SceneInputState,
+} from '@/lib/hooks/useSceneInteraction';
 
 /* ─────────────────────────────────────────────
    LogoScene — SOLO el logo GRANDE para el HOME
    ───────────────────────────────────────────── */
-function LogoScene() {
+function LogoScene({ input }: { input: SceneInputState }) {
   const groupRef = useRef<THREE.Group>(null);
   const matsRef = useRef<THREE.ShaderMaterial[]>([]);
+  const logoCenterRef = useRef(new THREE.Vector3());
 
-  const { camera, gl, scene } = useThree();
+  const { camera, gl, scene, size } = useThree();
+
+  /* ── Responsive: escalar logo según ancho del viewport ── */
+  const BASE_WIDTH = 1920;
+  const isMobile = size.width < 768;
+
+  const responsiveScale = useMemo(() => {
+    const w = size.width;
+    if (w < 768) {
+      // Móvil: proporción legible y centrado (antes quedaba fuera de encuadre por X alto)
+      const ratio = Math.min(w / 420, 1.2);
+      return Math.max(0.38, Math.min(ratio * 0.88, 1.05));
+    }
+    const ratio = Math.min(w / BASE_WIDTH, 1);
+    return Math.max(0.45, ratio);
+  }, [size.width]);
 
   // Env map
   const envMap = useCubeTexture(
@@ -49,8 +60,19 @@ function LogoScene() {
 
   // Camera
   const cameraBasePos = useMemo(() => new THREE.Vector3(0, 1.1, 5.8), []);
-  const parallaxStrength = useMemo(() => ({ x: 0.8, y: 0.4 }), []);
+  const parallaxStrength = useMemo(
+    () => (isMobile ? { x: 0.45, y: 0.28 } : { x: 0.8, y: 0.4 }),
+    [isMobile]
+  );
   const cameraLerp = 0.05;
+
+  /* Móvil: FOV algo más cerrado + aspect correcto para que el logo encaje en proporción */
+  useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    cam.fov = isMobile ? 48 : 60;
+    cam.aspect = size.width / Math.max(size.height, 1);
+    cam.updateProjectionMatrix();
+  }, [camera, isMobile, size.width, size.height]);
 
   // GLB — logo grande ÚNICO
   const { scene: gltfScene } = useGLTF('/cdcase/logobt2.glb');
@@ -99,19 +121,25 @@ function LogoScene() {
       child.renderOrder = 10;
     });
 
-    // ✅ Posición del logo GRANDE del diseñador
-    logo.position.set(2.6, 3.3, 0.1);
+    // Desktop: logo desplazado a la derecha. Móvil: centrado en X para que no se salga del encuadre
+    const s = (isMobile ? 1.58 : 1.7) * responsiveScale;
+    const xPos = isMobile ? 0 : 4.05 * responsiveScale;
+    const yPos = isMobile ? 4.42 : 5.5;
+    logo.position.set(xPos, yPos, -5.0);
     logo.rotation.set(0, 0, 0);
-    logo.scale.set(1.1, 1.1, 1.1);
+    logo.scale.set(s, s, s);
 
     if (groupRef.current) {
-      // Limpiar TODO antes de agregar — previene duplicados
       while (groupRef.current.children.length > 0) {
         groupRef.current.remove(groupRef.current.children[0]);
       }
       groupRef.current.add(logo);
+
+      // Calcular y guardar el centro del logo en world space
+      const box = new THREE.Box3().setFromObject(groupRef.current);
+      box.getCenter(logoCenterRef.current);
     }
-  }, [logo, createGlassMaterial]);
+  }, [logo, createGlassMaterial, responsiveScale, size.width, isMobile]);
 
   // Limpiar al desmontar
   useEffect(() => {
@@ -129,18 +157,29 @@ function LogoScene() {
   // Tick
   const persp = camera as THREE.PerspectiveCamera;
   useFrame(() => {
-    if (!orbitState.isOrbiting) {
-      const targetX = cameraBasePos.x + mouseState.x * parallaxStrength.x;
-      const targetY = cameraBasePos.y + mouseState.y * parallaxStrength.y;
+    const c = logoCenterRef.current;
+
+    if (!input.isOrbiting) {
+      // En reposo la cámara se alinea al centro del logo (vista frontal)
+      const targetX = c.x + input.x * parallaxStrength.x;
+      const targetY = c.y + input.y * parallaxStrength.y;
       persp.position.x += (targetX - persp.position.x) * cameraLerp;
       persp.position.y += (targetY - persp.position.y) * cameraLerp;
       persp.position.z = cameraBasePos.z;
-      persp.lookAt(0, 0.6, 0);
+      persp.lookAt(c);
     }
 
+    // Rotar alrededor del centro del logo (translate → rotate → translate back)
     if (groupRef.current) {
-      groupRef.current.rotation.y = orbitState.rotationY;
-      groupRef.current.rotation.x = orbitState.rotationX;
+      const c = logoCenterRef.current;
+      groupRef.current.position.set(0, 0, 0);
+      groupRef.current.rotation.set(0, 0, 0);
+
+      // Translate to center, rotate, translate back
+      groupRef.current.position.set(-c.x, -c.y, -c.z);
+      groupRef.current.rotation.set(input.rotationX, input.rotationY, 0);
+      groupRef.current.position.applyEuler(groupRef.current.rotation);
+      groupRef.current.position.add(c);
     }
 
     for (const mat of matsRef.current) {
@@ -155,44 +194,27 @@ function LogoScene() {
    Logo3D — Componente exportado (HOME)
    ───────────────────────────────────────────── */
 export default function Logo3D() {
-  const [isDragging, setIsDragging] = useState(false);
+  const inputRef = useRef<SceneInputState | null>(null);
+  if (!inputRef.current) inputRef.current = createInputState();
+  const input = inputRef.current;
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseState.x = (e.clientX / window.innerWidth - 0.5);
-      mouseState.y = (e.clientY / window.innerHeight - 0.5);
+  const { isDragging, startOrbit, requestOrientationPermission } =
+    useSceneInteraction(input);
 
-      if (orbitState.isOrbiting) {
-        const dx = e.clientX - orbitState.lastX;
-        const dy = e.clientY - orbitState.lastY;
-        const orbitStrength = 0.005;
-        orbitState.rotationY += dx * orbitStrength;
-        orbitState.rotationX += dy * orbitStrength;
-        orbitState.rotationX = Math.max(-Math.PI * 0.25, Math.min(Math.PI * 0.25, orbitState.rotationX));
-        orbitState.lastX = e.clientX;
-        orbitState.lastY = e.clientY;
-      }
+  /* Móvil: el offset -600 recortaba mal el frame; menos desplazamiento = logo visible en la franja superior */
+  const [canvasTopOffset, setCanvasTopOffset] = useState(-600);
+  const [isMobileLayout, setIsMobileLayout] = useState(false);
+  useLayoutEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const apply = () => {
+      const narrow = mq.matches;
+      setIsMobileLayout(narrow);
+      setCanvasTopOffset(narrow ? -240 : -600);
     };
-
-    const handleMouseUp = () => {
-      orbitState.isOrbiting = false;
-      setIsDragging(false);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
   }, []);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    orbitState.isOrbiting = true;
-    orbitState.lastX = e.clientX;
-    orbitState.lastY = e.clientY;
-    setIsDragging(true);
-  };
 
   return (
     <>
@@ -200,11 +222,11 @@ export default function Logo3D() {
       <div
         style={{
           position: 'fixed',
-          top: 0,
+          top: canvasTopOffset,
           left: 0,
           width: '100vw',
           height: '100vh',
-          zIndex: 2,
+          zIndex: 15,
           pointerEvents: 'none',
         }}
       >
@@ -219,22 +241,28 @@ export default function Logo3D() {
           }}
           dpr={[1, 2]}
         >
-          <LogoScene />
+          <LogoScene input={input} />
         </Canvas>
       </div>
 
-      {/* Zona interactiva del header */}
+      {/* Zona interactiva del header — drag/orbit + touch */}
       <div
-        onMouseDown={handleMouseDown}
+        onMouseDown={(e) => startOrbit(e.clientX, e.clientY)}
+        onTouchStart={(e) => {
+          requestOrientationPermission();
+          if (e.touches[0])
+            startOrbit(e.touches[0].clientX, e.touches[0].clientY);
+        }}
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
-          height: '270px',
-          zIndex: 3,
+          height: isMobileLayout ? 160 : 270,
+          zIndex: 16,
           pointerEvents: 'auto',
           cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none',
         }}
       />
     </>

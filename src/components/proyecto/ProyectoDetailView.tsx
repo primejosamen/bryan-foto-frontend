@@ -30,19 +30,16 @@ function ThumbnailStrip({
   onSelect: (i: number) => void;
 }) {
   return (
-    <div className="fixed top-24 left-8 z-30 flex gap-2">
+    <div className="fixed top-10 left-8 z-30 flex gap-2">
       {fotos.map((foto, i) => (
         <button
           key={foto.id}
           onClick={() => onSelect(i)}
-          className="relative block overflow-hidden transition-all duration-300"
-          style={{
-            width: i === activeIndex ? 72 : 56,
-            height: i === activeIndex ? 48 : 38,
-            opacity: i === activeIndex ? 1 : 0.45,
-            borderBottom:
-              i === activeIndex ? '2px solid white' : '2px solid transparent',
-          }}
+          className={`relative block overflow-hidden transition-all duration-300 border-b-2 ${
+            i === activeIndex
+              ? 'h-12 w-18 border-white opacity-100'
+              : 'h-9.5 w-14 border-transparent opacity-45'
+          }`}
         >
           <Image
             src={getStrapiImageUrl(foto)}
@@ -57,19 +54,17 @@ function ThumbnailStrip({
   );
 }
 
-/* ──────────── Single editorial slide (one per photo) ─────────── */
-function EditorialSlide({
+/* ──────────── Single photo card (one per photo) ─────────── */
+function PhotoCard({
   foto,
   index,
   titulo,
-  descripcion,
-  total,
+  onClick,
 }: {
   foto: StrapiImage;
   index: number;
   titulo: string;
-  descripcion?: string;
-  total: number;
+  onClick: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -78,19 +73,11 @@ function EditorialSlide({
     offset: ['start end', 'end start'],
   });
 
-  // parallax: image moves slower than scroll
-  const y = useTransform(scrollYProgress, [0, 1], ['8%', '-8%']);
-  // fade in / out as the slide enters / exits viewport
+  const y = useTransform(scrollYProgress, [0, 1], ['4%', '-4%']);
   const opacity = useTransform(
     scrollYProgress,
-    [0, 0.2, 0.5, 0.8, 1],
+    [0, 0.15, 0.5, 0.85, 1],
     [0, 1, 1, 1, 0]
-  );
-  // subtle scale
-  const scale = useTransform(
-    scrollYProgress,
-    [0, 0.3, 0.7, 1],
-    [0.92, 1, 1, 0.96]
   );
 
   /* Determine image proportions to respect original aspect ratio */
@@ -99,185 +86,30 @@ function EditorialSlide({
   const isWide =
     foto.width && foto.height ? foto.width / foto.height > 1.6 : false;
 
-  /* Image container sizing based on orientation */
   const imageContainerStyle: React.CSSProperties = isPortrait
-    ? { width: '42vw', height: '75vh', maxHeight: '85vh' }
+    ? { width: '100%', aspectRatio: `${foto.width} / ${foto.height}` }
     : isWide
-      ? { width: '65vw', height: '55vh', maxHeight: '70vh' }
-      : { width: '55vw', height: '65vh', maxHeight: '80vh' };
-
-  const isHero = index === 0;
+      ? { width: '100%', aspectRatio: `${foto.width} / ${foto.height}` }
+      : { width: '100%', aspectRatio: `${foto.width} / ${foto.height}` };
 
   return (
     <motion.div
       ref={ref}
-      className="relative min-h-screen flex items-center justify-center"
-      style={{ opacity }}
+      className="relative w-full overflow-hidden cursor-pointer"
+      style={{ ...imageContainerStyle, opacity }}
+      onClick={onClick}
     >
-      {/* ── Editorial grid layout ── */}
-      <div
-        className="relative w-full flex items-center"
-        style={{
-          minHeight: '100vh',
-          paddingLeft: 'clamp(2rem, 5vw, 5rem)',
-          paddingRight: 'clamp(2rem, 5vw, 5rem)',
-        }}
-      >
-        {/* Left column: title + meta (only on hero or every 3rd image) */}
-        {(isHero || index % 3 === 0) && (
-          <motion.div
-            className="absolute z-20"
-            style={{
-              left: 'clamp(2rem, 5vw, 5rem)',
-              bottom: isHero ? '12vh' : '15vh',
-              maxWidth: '340px',
-            }}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: false, amount: 0.5 }}
-          >
-            {isHero && (
-              <>
-                {/* Decorative line */}
-                <div
-                  className="mb-4"
-                  style={{
-                    width: '100%',
-                    height: '1px',
-                    background:
-                      'linear-gradient(90deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)',
-                  }}
-                />
-                <h1
-                  className="text-white font-medium leading-tight"
-                  style={{
-                    fontFamily: 'var(--font-ibm-plex-sans), IBM Plex Sans, sans-serif',
-                    fontSize: 'clamp(28px, 4vw, 48px)',
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {titulo}
-                </h1>
-                {descripcion && (
-                  <p
-                    className="text-white/60 mt-2"
-                    style={{
-                      fontFamily:
-                        'var(--font-ibm-plex-sans), IBM Plex Sans, sans-serif',
-                      fontSize: 'clamp(14px, 1.4vw, 20px)',
-                      fontWeight: 300,
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    {descripcion}
-                  </p>
-                )}
-              </>
-            )}
-
-            {!isHero && (
-              <span
-                className="text-white/30"
-                style={{
-                  fontFamily:
-                    'var(--font-ibm-plex-sans), IBM Plex Sans, sans-serif',
-                  fontSize: '13px',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-              </span>
-            )}
-          </motion.div>
-        )}
-
-        {/* Center: photo */}
-        <motion.div
-          className="relative mx-auto overflow-hidden"
-          style={{
-            ...imageContainerStyle,
-            scale,
-          }}
-        >
-          <motion.div className="relative w-full h-full" style={{ y }}>
-            <Image
-              src={getStrapiImageUrl(foto)}
-              alt={`${titulo} — ${index + 1}`}
-              fill
-              className="object-contain"
-              sizes="(max-width: 768px) 90vw, 65vw"
-              priority={index < 2}
-              quality={90}
-            />
-          </motion.div>
-        </motion.div>
-
-        {/* Right side: page indicator (on hero) */}
-        {isHero && (
-          <motion.div
-            className="absolute z-20 hidden md:flex flex-col items-end"
-            style={{
-              right: 'clamp(2rem, 5vw, 5rem)',
-              top: '50%',
-              transform: 'translateY(-50%)',
-            }}
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            viewport={{ once: false, amount: 0.5 }}
-          >
-            {/* Vertical line */}
-            <div
-              style={{
-                width: '1px',
-                height: '120px',
-                background:
-                  'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%)',
-              }}
-            />
-          </motion.div>
-        )}
-      </div>
-
-      {/* Scroll-down hint on first slide only */}
-      {isHero && (
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.8 }}
-        >
-          <span
-            className="text-white/30"
-            style={{
-              fontFamily:
-                'var(--font-ibm-plex-sans), IBM Plex Sans, sans-serif',
-              fontSize: '11px',
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-            }}
-          >
-            Scroll
-          </span>
-          <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="2"
-            >
-              <path d="M12 5v14M5 12l7 7 7-7" />
-            </svg>
-          </motion.div>
-        </motion.div>
-      )}
+      <motion.div className="relative w-full h-full" style={{ y }}>
+        <Image
+          src={getStrapiImageUrl(foto)}
+          alt={`${titulo} — ${index + 1}`}
+          fill
+          className="object-contain"
+          sizes="(max-width: 768px) 90vw, 50vw"
+          priority={index < 2}
+          quality={90}
+        />
+      </motion.div>
     </motion.div>
   );
 }
@@ -285,6 +117,7 @@ function EditorialSlide({
 /* ════════════════════════ Main component ═════════════════════════ */
 export default function ProyectoDetailView({ proyecto }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const todasLasFotos = useMemo(
@@ -327,20 +160,12 @@ export default function ProyectoDetailView({ proyecto }: Props) {
   }, []);
 
   return (
-    <div className="relative bg-black min-h-screen">
-      {/* Logo pequeño 3D — arriba izquierda */}
-      <LogoSmall3D />
-
+    <div className="relative bg-white min-h-screen">
       {/* Back link */}
-      <div className="fixed top-8 left-8 z-40">
+      <div className="fixed top-4 left-4 z-40 md:top-8 md:left-8">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-white/50 hover:text-white transition-colors"
-          style={{
-            fontFamily: 'var(--font-ibm-plex-sans), IBM Plex Sans, sans-serif',
-            fontSize: '13px',
-            letterSpacing: '0.06em',
-          }}
+          className="inline-flex items-center gap-2 font-ibm-mono text-[16px] font-normal tracking-[-0.05em] text-red-500! transition-colors hover:text-red-700!"
         >
           <svg
             width="18"
@@ -356,47 +181,102 @@ export default function ProyectoDetailView({ proyecto }: Props) {
         </Link>
       </div>
 
-      {/* Thumbnail strip */}
-      {todasLasFotos.length > 1 && (
-        <ThumbnailStrip
-          fotos={todasLasFotos}
-          activeIndex={activeIndex}
-          onSelect={scrollTo}
-        />
-      )}
+      {/* Thumbnail nav is now in column 3 of the grid */}
 
-      {/* Editorial slides */}
-      <div className="relative">
-        {todasLasFotos.map((foto, index) => (
-          <div
-            key={foto.id}
-            ref={(el) => {
-              sectionRefs.current[index] = el;
-            }}
-            data-index={index}
-          >
-            <EditorialSlide
-              foto={foto}
-              index={index}
-              titulo={proyecto.titulo}
-              descripcion={proyecto.descripcion}
-              total={todasLasFotos.length}
-            />
+      {/* 3-column grid: title | images | thumbnails */}
+      {/* Session info bar — fixed centered, 3 columns each left-aligned */}
+      <div className="relative z-10 flex flex-col gap-2 px-4 pt-14 pb-4 md:fixed md:top-1/2 md:-translate-y-1/2 md:left-0 md:right-0 md:pointer-events-none md:px-10 md:pt-0 md:pb-0 md:grid md:grid-cols-[1fr_2fr_1fr] md:gap-10">
+        <div className="flex items-center">
+          <h1 className="font-ibm-mono text-[clamp(2rem,4.5vw,64px)] font-bold italic leading-tight text-red-500 tracking-[-0.085em]">
+            {proyecto.titulo}
+          </h1>
+        </div>
+        <div className="flex items-center">
+          {proyecto.descripcion && (
+            <p className="font-ibm-mono text-[clamp(0.75rem,1.2vw,16px)] font-bold italic text-red-500 tracking-[-0.05em]">
+              {proyecto.descripcion}
+            </p>
+          )}
+        </div>
+        <div className="hidden md:flex items-center">
+          <span className="font-ibm-mono font-bold text-[clamp(0.625rem,0.8vw,11px)] uppercase tracking-[0.12em] text-red-500">
+            {todasLasFotos.length} fotos
+          </span>
+        </div>
+      </div>
+
+      {/* Images + Thumbnails grid */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr_1fr] gap-2 md:gap-10 px-4 md:px-10 py-4 md:py-20 overflow-visible">
+        {/* Column 1: empty (hidden on mobile) */}
+        <div className="hidden md:block" />
+
+        {/* Column 2: Images */}
+        <div className="flex flex-col items-start gap-2">
+          {todasLasFotos.map((foto, index) => (
+            <div
+              key={foto.id}
+              ref={(el) => {
+                sectionRefs.current[index] = el;
+              }}
+              data-index={index}
+              className="w-full"
+            >
+              <PhotoCard
+                foto={foto}
+                index={index}
+                titulo={proyecto.titulo}
+                onClick={() => setLightboxIndex(index)}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Column 3: Thumbnail nav (sticky, right) — hidden on mobile */}
+        <div className="relative hidden md:block">
+          <div className="sticky top-20">
+            <motion.div
+              className="absolute right-0 flex flex-col gap-2 p-3 items-end"
+              layout
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            >
+              {todasLasFotos.map((foto, i) => {
+                const isActive = i === activeIndex;
+                return (
+                  <motion.button
+                    key={foto.id}
+                    onClick={() => scrollTo(i)}
+                    layout
+                    className="relative block overflow-hidden"
+                    animate={{
+                      width: isActive ? 600 : 130,
+                      height: isActive ? 380 : 82,
+                      opacity: isActive ? 1 : 0.5,
+                    }}
+                    whileHover={{ opacity: 0.85, scale: 1.03 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  >
+                    <Image
+                      src={getStrapiImageUrl(foto)}
+                      alt={`Miniatura ${i + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="600px"
+                    />
+                  </motion.button>
+                );
+              })}
+            </motion.div>
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Footer nav */}
-      <footer className="relative z-20 px-8 md:px-20 py-20 border-t border-white/10">
+      <footer className="relative z-20 px-4 md:px-20 py-10 md:py-20 border-t border-black/10">
         <Link
           href="/"
-          className="inline-flex items-center gap-4 group"
-          style={{
-            fontFamily: 'var(--font-ibm-plex-sans), IBM Plex Sans, sans-serif',
-            fontSize: '20px',
-          }}
+          className="group inline-flex items-center gap-4 font-ibm-mono text-[16px]"
         >
-          <span className="text-white/50 group-hover:text-white transition-colors">
+          <span className="text-red-500 group-hover:text-red-700 transition-colors">
             Ver todos los proyectos
           </span>
           <svg
@@ -406,7 +286,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="transform group-hover:translate-x-2 transition-transform"
+            className="transform group-hover:translate-x-2 transition-transform text-red-500"
           >
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -415,6 +295,57 @@ export default function ProyectoDetailView({ proyecto }: Props) {
 
       {/* Progress bar */}
       <ProgressBar total={todasLasFotos.length} activeIndex={activeIndex} />
+
+      {/* Lightbox dialog */}
+      <AnimatePresence>
+        {lightboxIndex !== null && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setLightboxIndex(null)}
+          >
+            {/* Blurred backdrop */}
+            <motion.div
+              className="absolute inset-0 bg-white/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+
+            {/* Image */}
+            <motion.div
+              className="relative z-10 w-[85vw] h-[85vh]"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Image
+                src={getStrapiImageUrl(todasLasFotos[lightboxIndex])}
+                alt={`${proyecto.titulo} — ${lightboxIndex + 1}`}
+                fill
+                className="object-contain"
+                sizes="85vw"
+                quality={95}
+              />
+            </motion.div>
+
+            {/* Close button */}
+            <button
+              className="absolute top-8 right-8 z-20 text-black/50 hover:text-black transition-colors"
+              onClick={() => setLightboxIndex(null)}
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -430,21 +361,13 @@ function ProgressBar({
   const pct = total > 1 ? ((activeIndex + 1) / total) * 100 : 100;
 
   return (
-    <div
-      className="fixed bottom-8 right-8 z-40 flex items-center gap-3"
-      style={{
-        fontFamily: 'var(--font-ibm-plex-sans), IBM Plex Sans, sans-serif',
-      }}
-    >
-      <span className="text-white/25 text-[11px] tracking-widest">
+    <div className="fixed bottom-4 right-4 md:top-[40%] md:bottom-auto md:right-8 z-40 flex items-center gap-3 font-ibm-mono">
+      <span className="text-red-500 text-[11px] tracking-widest">
         {String(activeIndex + 1).padStart(2, '0')}/{String(total).padStart(2, '0')}
       </span>
-      <div
-        className="relative overflow-hidden"
-        style={{ width: 60, height: 2, background: 'rgba(255,255,255,0.1)' }}
-      >
+      <div className="relative h-0.5 w-15 overflow-hidden bg-transparent">
         <motion.div
-          className="absolute inset-y-0 left-0 bg-white/50"
+          className="absolute inset-y-0 left-0 bg-red-500"
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
         />

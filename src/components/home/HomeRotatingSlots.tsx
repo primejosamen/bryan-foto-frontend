@@ -1,18 +1,21 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Project } from '@/models';
 import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
-import Logo3D from '@/components/ui/Logo3D';
 
 /* ═══════════════════════ MEDIDAS DEL DISEÑO ═══════════════════ */
-const SLOT_COUNT = 3;
+const SLOT_COUNT_DESKTOP = 3;
 const SLOT_W = 472;
 const SLOT_GAP = 10;
 const HEADER_H = 170;
+const HEADER_H_MOBILE = 120;
+/** max-width 767px: un solo slot a ancho completo + header más bajo */
+const MOBILE_MAX = 767;
 const NAV_BOTTOM = 65;
 const NAV_GAP = 10;
 
@@ -48,24 +51,40 @@ type SlotPhase = 'idle' | 'hold';
 
 /* ═══════════════════════ COMPONENTE PRINCIPAL ═════════════════ */
 export default function HomeRotatingSlots({ proyectos }: Props) {
+  const [slotCount, setSlotCount] = useState<1 | 3>(3);
+
+  useLayoutEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`);
+    const apply = () => setSlotCount(mq.matches ? 1 : SLOT_COUNT_DESKTOP);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
   const proyectosVisibles = useMemo(() => {
     return proyectos.filter((p) => p.visible).sort((a, b) => a.orden - b.orden);
   }, [proyectos]);
 
-  /* Distribuir 6 proyectos en 3 slots (2 por slot) */
+  /* Desktop: 6 proyectos en 3 slots (2 por slot). Móvil: todos en 1 slot rotativo */
   const slots = useMemo<Slot[]>(() => {
-    const pool = proyectosVisibles.slice(0, SLOT_COUNT * 2);
+    if (proyectosVisibles.length === 0) return [];
+
+    if (slotCount === 1) {
+      return [{ projects: proyectosVisibles }];
+    }
+
+    const pool = proyectosVisibles.slice(0, slotCount * 2);
     if (pool.length === 0) return [];
 
     const result: Slot[] = [];
-    for (let i = 0; i < SLOT_COUNT; i++) {
+    for (let i = 0; i < slotCount; i++) {
       const slotProjects: Project[] = [];
       if (i < pool.length) slotProjects.push(pool[i]);
-      if (i + SLOT_COUNT < pool.length) slotProjects.push(pool[i + SLOT_COUNT]);
+      if (i + slotCount < pool.length) slotProjects.push(pool[i + slotCount]);
       if (slotProjects.length > 0) result.push({ projects: slotProjects });
     }
     return result;
-  }, [proyectosVisibles]);
+  }, [proyectosVisibles, slotCount]);
 
   const [activeIndices, setActiveIndices] = useState<number[]>(() => slots.map(() => 0));
   const [slotTicks, setSlotTicks] = useState<number[]>(() => slots.map(() => 0));
@@ -178,77 +197,30 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
     );
   }
 
-  const slotsBlockWidth = SLOT_COUNT * SLOT_W + (SLOT_COUNT - 1) * SLOT_GAP;
+  const headerH = slotCount === 1 ? HEADER_H_MOBILE : HEADER_H;
+  const slotsBlockWidthPx = slotCount * SLOT_W + (slotCount - 1) * SLOT_GAP;
+  const isSingleSlot = slotCount === 1;
 
   return (
-    <section className="relative bg-white text-black" style={{ height: '100vh', overflow: 'hidden', clipPath: 'inset(0)' }}>
-      <Logo3D />
-
-      {/* NAV — absolute dentro de la section, NO fixed */}
-<div
-  style={{
-    position: 'absolute',
-    left: slotsBlockWidth + NAV_GAP,
-    right: 0,
-    bottom: NAV_BOTTOM,
-    zIndex: 9999,
-    pointerEvents: 'auto',
-    paddingRight: 0,
-  }}
->
-  <div
-    style={{
-      height: 14,
-      background: '#ff0000',
-      width: '100%',
-      position: 'relative',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      paddingRight: 8,
-      gap: 80,
-      overflow: 'visible',
-    }}
-  >
-    <HomeNavLink href="/about">About</HomeNavLink>
-    <HomeNavLink href="/contacto">Contact</HomeNavLink>
-  </div>
-</div>
+    <section className="relative h-screen overflow-hidden bg-white text-black" style={{ clipPath: 'inset(0)' }}>
 
       <div className="sticky top-0 h-screen bg-white">
-        {/* HEADER */}
-        <div className="relative px-12 pt-8" style={{ height: `${HEADER_H}px` }}>
-          <button
-            aria-label="Menu"
-            className="absolute left-12 top-10"
-            style={{ zIndex: 100, position: 'relative' }}
-          >
-            <span className="block w-10 h-[6px] bg-black" />
-          </button>
-
-          <button
-            aria-label="Open"
-            className="absolute right-12 top-8"
-            style={{ zIndex: 100, position: 'relative' }}
-          >
-            <span className="text-3xl leading-none select-none">+</span>
-          </button>
-        </div>
-
-        {/* MAIN */}
+        {/* HEADER — menos alto en móvil para dar más aire a la foto */}
         <div
-          style={{
-            position: 'relative',
-            height: `calc(100vh - ${HEADER_H}px)`,
-            zIndex: 5,
-          }}
+          className="relative px-4 pt-6 md:px-12 md:pt-8"
+          style={{ height: `${headerH}px` }}
+        />
+
+        {/* MAIN — móvil: márgenes laterales; desktop: ancho fijo como antes */}
+        <div
+          className="relative z-5 px-4 md:px-0"
+          style={{ height: `calc(100vh - ${headerH}px)` }}
         >
           <div
+            className={`flex h-full ${isSingleSlot ? 'w-full max-w-full' : ''}`}
             style={{
-              display: 'flex',
               gap: `${SLOT_GAP}px`,
-              height: '100%',
-              width: `${slotsBlockWidth}px`,
+              width: isSingleSlot ? '100%' : `${slotsBlockWidthPx}px`,
             }}
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
@@ -261,6 +233,7 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
                 slotIndex={slotIdx}
                 slotTick={slotTicks[slotIdx] ?? 0}
                 slotPhase={slotPhases[slotIdx] ?? 'idle'}
+                fullWidth={isSingleSlot}
               />
             ))}
           </div>
@@ -277,22 +250,28 @@ function CoverSlot({
   slotIndex,
   slotTick,
   slotPhase,
+  fullWidth,
 }: {
   slot: Slot;
   activeIndex: number;
   slotIndex: number;
   slotTick: number;
   slotPhase: SlotPhase;
+  fullWidth?: boolean;
 }) {
-  const activeProject = slot.projects[activeIndex];
+  const safeIndex = activeIndex % slot.projects.length;
+  const activeProject = slot.projects[safeIndex];
+  if (!activeProject) return null;
   const hasMultiple = slot.projects.length > 1;
 
   const [hover, setHover] = useState(false);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [labelClient, setLabelClient] = useState({ x: 0, y: 0 });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const onMove = (e: React.PointerEvent<HTMLElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setLabelClient({ x: e.clientX + 12, y: e.clientY + 12 });
   };
 
   /* Duración ligeramente distinta por slot + pequeña modulación */
@@ -312,158 +291,97 @@ function CoverSlot({
   return (
     <Link
       href={`/proyecto/${activeProject.slug}`}
-      style={{
-        width: `${SLOT_W}px`,
-        flexShrink: 0,
-        position: 'relative',
-        display: 'block',
-        height: '100%',
-        overflow: 'hidden',
-        zIndex: 10,
+      className={`relative z-10 block h-full overflow-visible ${
+        fullWidth ? 'min-w-0 flex-1 shrink' : 'w-[472px] shrink-0'
+      }`}
+      style={fullWidth ? { width: '100%', minWidth: 0 } : undefined}
+      onPointerEnter={(e) => {
+        setHover(true);
+        setLabelClient({ x: e.clientX + 12, y: e.clientY + 12 });
       }}
-      onPointerEnter={() => setHover(true)}
       onPointerLeave={() => setHover(false)}
       onPointerMove={onMove}
     >
-      {/* Wrapper de HOLD visual: mini “suspensión” antes del slide */}
-      <motion.div
-        style={{ position: 'absolute', inset: 0, zIndex: 1 }}
-        animate={
-          slotPhase === 'hold'
-            ? { scale: 1.006, y: -2, filter: 'brightness(0.985)' }
-            : { scale: 1, y: 0, filter: 'brightness(1)' }
-        }
-        transition={{ duration: 0.2, ease: 'easeInOut' }}
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={activeProject.id}
-            style={{
-              position: 'absolute',
-              inset: 0,
-            }}
-            initial={{ y: '100%', opacity: 0.92, scale: 1.008 }}
-            animate={{ y: '0%', opacity: 1, scale: 1 }}
-            exit={{ y: '-100%', opacity: 0.92, scale: 1.004 }}
-            transition={{
-              duration: slideDuration,
-              ease: slideEase,
-            }}
-          >
-            <Image
-              src={getStrapiImageUrl(activeProject.foto_portada)}
-              alt={activeProject.titulo}
-              fill
-              style={{ objectFit: 'cover' }}
-              sizes={`${SLOT_W}px`}
-              quality={100}
-              priority={slotIndex < 3}
-            />
-          </motion.div>
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Overlay sutil de hold (apenas perceptible, editorial) */}
-      <motion.div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          zIndex: 2,
-          pointerEvents: 'none',
-          background:
-            'linear-gradient(to top, rgba(0,0,0,0.08), rgba(0,0,0,0.02) 30%, rgba(0,0,0,0))',
-        }}
-        animate={{ opacity: slotPhase === 'hold' ? 0.55 : 0.25 }}
-        transition={{ duration: 0.18, ease: 'easeInOut' }}
-      />
-
-      {/* Indicadores */}
-      {hasMultiple && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 16,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 20,
-            display: 'flex',
-            gap: 6,
-          }}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        {/* Wrapper de HOLD visual: mini “suspensión” antes del slide */}
+        <motion.div
+          className="absolute inset-0 z-1"
+          animate={
+            slotPhase === 'hold'
+              ? { scale: 1.006, y: -2, filter: 'brightness(0.985)' }
+              : { scale: 1, y: 0, filter: 'brightness(1)' }
+          }
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
         >
-          {slot.projects.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: i === activeIndex ? 16 : 6,
-                height: 6,
-                borderRadius: 3,
-                background: i === activeIndex ? '#ff0000' : 'rgba(255,255,255,0.5)',
-                transition: 'all 0.3s ease',
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={activeProject.id}
+              className="absolute inset-0"
+              initial={{ y: '100%', opacity: 0.92, scale: 1.008 }}
+              animate={{ y: '0%', opacity: 1, scale: 1 }}
+              exit={{ y: '-100%', opacity: 0.92, scale: 1.004 }}
+              transition={{
+                duration: slideDuration,
+                ease: slideEase,
               }}
-            />
-          ))}
-        </div>
-      )}
+            >
+              <Image
+                src={getStrapiImageUrl(activeProject.foto_portada)}
+                alt={activeProject.titulo}
+                fill
+                className="object-cover"
+                sizes={fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`}
+                quality={100}
+                priority={slotIndex < 3 || fullWidth}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
 
-      
+        {/* Overlay sutil de hold (apenas perceptible, editorial) */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-2"
+          style={{
+            background:
+              'linear-gradient(to top, rgba(0,0,0,0.08), rgba(0,0,0,0.02) 30%, rgba(0,0,0,0))',
+          }}
+          animate={{ opacity: slotPhase === 'hold' ? 0.55 : 0.25 }}
+          transition={{ duration: 0.18, ease: 'easeInOut' }}
+        />
 
-      {/* Cursor follower */}
-      <motion.div
-        style={{
-          position: 'absolute',
-          left: pos.x,
-          top: pos.y,
-          transform: 'translate(12px, 12px)',
-          zIndex: 40,
-          pointerEvents: 'none',
-        }}
-        animate={{
-          opacity: hover ? 1 : 0,
-          scale: hover ? 1 : 0.96,
-        }}
-        transition={{ duration: 0.12, ease: 'easeOut' }}
-      >
-        <span
-  style={{
-    display: 'inline-flex',
-    alignItems: 'center',
-    fontFamily: 'IBM Plex Sans, sans-serif',
-    fontSize: 16,
-    fontWeight: 600,
-    color: '#ffffff',
-    background: '#ff0000',
-    padding: '8px 12px',
-    lineHeight: 1,
-    letterSpacing: '0',
-  }}
-        >
-          {activeProject.titulo}
-        </span>
-      </motion.div>
-    </Link>
-  );
-}
+        {/* Indicadores */}
+        {hasMultiple && (
+          <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+            {slot.projects.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-[3px] transition-all duration-300 ${
+                  i === safeIndex ? 'w-4 bg-accent' : 'w-1.5 bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
-/* ═══════════════════════ NAV LINK ════════════════════════════ */
-function HomeNavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        fontFamily: 'IBM Plex Sans, sans-serif',
-        fontSize: 16,
-        fontWeight: 600,
-        color: '#ffffff',
-        textDecoration: 'none',
-        lineHeight: 1,
-        padding: '2px 0',
-        position: 'relative',
-        zIndex: 1,
-      }}
-    >
-      {children}
+      {/* Cursor follower — portal para no recortar con section / clip-path */}
+      {mounted &&
+        createPortal(
+          <motion.div
+            className="pointer-events-none fixed z-[9999]"
+            style={{ left: labelClient.x, top: labelClient.y }}
+            animate={{
+              opacity: hover ? 1 : 0,
+              scale: hover ? 1 : 0.96,
+            }}
+            transition={{ duration: 0.12, ease: 'easeOut' }}
+          >
+            <span className="inline-flex items-center bg-accent px-1.5 py-0.5 font-ibm-mono text-[23px] italic font-bold leading-none tracking-[-0.085em] text-white">
+              {activeProject.titulo}
+            </span>
+          </motion.div>,
+          document.body
+        )}
     </Link>
   );
 }

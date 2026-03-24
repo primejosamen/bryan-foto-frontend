@@ -1,30 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import type { ContactInfo } from '@/models';
-import { COLORS, FONT_FAMILY, FONT_SIZES } from '@/config/constants';
-import { ROUTES } from '@/config/navigation';
-
-const LAYOUT = {
-  navTop: 140.58,
-  contentTop: 300,
-  navLeft: 603.2,
-  contentLeft: 'clamp(8rem, 12vw, 12rem)',
-} as const;
-
-const PAGE_NAV_LINKS = [
-  { href: ROUTES.about, label: 'About' },
-  { href: ROUTES.contact, label: 'Contact' },
-] as const;
+import NavFooter from '@/components/layout/NavFooter';
+import LogoAbout3D from '@/components/ui/LogoAbout3D';
 
 interface ContactSectionProps {
   contacto: ContactInfo | null;
 }
 
 export default function ContactSection({ contacto }: ContactSectionProps) {
-  const pathname = usePathname();
 
   if (!contacto) return null;
 
@@ -66,269 +51,93 @@ export default function ContactSection({ contacto }: ContactSectionProps) {
   );
 
   return (
-    <section className="relative min-h-screen">
+    <section className="relative h-auto md:h-screen overflow-auto md:overflow-hidden">
       {/* Fondo blanco fijo */}
-      <div
-        className="fixed inset-0"
-        style={{
-          zIndex: 0,
-          background: '#ffffff',
-        }}
-      />
+      <div className="fixed inset-0 z-0 bg-white" />
 
-      {/* Barra roja fija igual a About */}
-      <div
-        style={{
-          position: 'fixed',
-          top: `${LAYOUT.navTop}px`,
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          height: 'auto',
-        }}
-      >
-        <div
-          style={{
-            background: COLORS.accent,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0,
-            paddingLeft: `${LAYOUT.navLeft}px`,
-          }}
+      {/* ── 3D LOGO ── */}
+      <LogoAbout3D />
+
+      {/* Footer nav */}
+      <NavFooter />
+
+      {/* ── 4×4 GRID LAYOUT ── */}
+      <div className="relative z-5 grid grid-cols-1 md:grid-cols-4 grid-rows-[auto_auto_1fr] md:grid-rows-4 gap-2 min-h-screen md:h-screen pointer-events-none text-black p-6 md:p-0">
+
+        {/* TÍTULO — mobile: top / desktop: row 2, col 3 */}
+        <motion.h1
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="col-start-1 md:col-start-3 row-start-1 md:row-start-2 self-end font-ibm-mono text-[clamp(1.5rem,2.5vw,32px)] italic font-bold leading-tight tracking-[-0.085em] pointer-events-auto pt-16 md:pt-0 bg-accent text-white px-2"
         >
-          {PAGE_NAV_LINKS.map((link) => {
-            const isActive = pathname === link.href;
+          Contact
+        </motion.h1>
 
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  fontFamily: FONT_FAMILY,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: COLORS.white,
-                  padding: '2px 20px',
-                  opacity: isActive ? 1 : 0.7,
-                  textDecoration: 'none',
-                  borderBottom: isActive
-                    ? '3px solid white'
-                    : '3px solid transparent',
-                }}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+        {/* LÍNEA SEPARADORA — mobile: below title / desktop: row 2, col 4 */}
+        <div className="col-start-1 md:col-start-4 row-start-1 md:row-start-2 self-end pb-1 md:pb-3 pr-0 md:pr-[clamp(2rem,4vw,4rem)] pointer-events-none">
+          <div className="w-full h-px bg-white/85" />
         </div>
-      </div>
 
-      {/* Capa de contenido */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 5,
-          display: 'flex',
-          minHeight: '100vh',
-        }}
-      >
-        {/* Columna izquierda vacía para mantener la lógica visual del About */}
-        <div style={{ width: '50%' }} />
-
-        {/* Columna derecha */}
-        <div
-          style={{
-            width: '50%',
-            paddingTop: `${LAYOUT.contentTop}px`,
-            paddingLeft: LAYOUT.contentLeft,
-            paddingRight: 'clamp(2rem, 4vw, 4rem)',
-            paddingBottom: '4rem',
-            color: '#000000',
-            pointerEvents: 'auto',
-          }}
+        {/* ITEMS — mobile: stacked / desktop: row 3, col 3-4 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="col-start-1 md:col-start-3 col-span-1 md:col-span-2 row-start-2 md:row-start-3 self-start pt-4 pr-0 md:pr-[clamp(2rem,4vw,4rem)] pointer-events-auto bg-accent text-white px-2"
         >
-          {/* Bloque principal */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '2rem',
-              width: '100%',
-            }}
-          >
-            {/* Título, corrido a la izquierda igual que About */}
-            <div
-              style={{
-                flexShrink: 0,
-                marginLeft: '-10.5rem',
-                minWidth: '170px',
-              }}
-            >
-              <h1
-                style={{
-                  fontFamily: FONT_FAMILY,
-                  fontSize: FONT_SIZES.title,
-                  fontWeight: 400,
-                  lineHeight: 1.05,
-                  margin: 0,
-                  color: '#000000',
-                }}
-              >
-                Contact
-              </h1>
-            </div>
-
-            {/* Línea + contenido */}
-            <div
-              style={{
-                flex: 1,
-                paddingTop: '1.3rem',
-              }}
-            >
-              <div
-                style={{
-                  width: '100%',
-                  height: '1px',
-                  background: 'rgba(0,0,0,0.85)',
-                  marginBottom: '0.8rem',
-                }}
-              />
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns:
-                    primaryItems.length > 1 ? 'repeat(2, minmax(0, 1fr))' : '1fr',
-                  columnGap: '3rem',
-                  rowGap: '1.25rem',
-                  alignItems: 'start',
-                }}
-              >
-                {primaryItems.map((item) => (
-                  <div key={item.key}>
-                    <div
-                      style={{
-                        fontFamily: FONT_FAMILY,
-                        fontSize: '11px',
-                        lineHeight: 1.2,
-                        fontWeight: 500,
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
-                        color: 'rgba(0,0,0,0.45)',
-                        marginBottom: '0.35rem',
-                      }}
-                    >
-                      {item.label}
-                    </div>
-
-                    {item.href ? (
-                      <a
-                        href={item.href}
-                        target={item.key === 'instagram' ? '_blank' : undefined}
-                        rel={
-                          item.key === 'instagram'
-                            ? 'noopener noreferrer'
-                            : undefined
-                        }
-                        style={{
-                          fontFamily: FONT_FAMILY,
-                          fontSize: FONT_SIZES.body,
-                          lineHeight: 1.3,
-                          fontWeight: 300,
-                          color: '#000000',
-                          textDecoration: 'none',
-                        }}
-                      >
-                        {item.value}
-                      </a>
-                    ) : (
-                      <div
-                        style={{
-                          fontFamily: FONT_FAMILY,
-                          fontSize: FONT_SIZES.body,
-                          lineHeight: 1.3,
-                          fontWeight: 300,
-                          color: '#000000',
-                        }}
-                      >
-                        {item.value}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {secondaryItems.length > 0 && (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns:
-                      secondaryItems.length > 1
-                        ? 'repeat(2, minmax(0, 1fr))'
-                        : '1fr',
-                    columnGap: '3rem',
-                    rowGap: '1.25rem',
-                    marginTop: '2rem',
-                  }}
-                >
-                  {secondaryItems.map((item) => (
-                    <div key={item.key}>
-                      <div
-                        style={{
-                          fontFamily: FONT_FAMILY,
-                          fontSize: '11px',
-                          lineHeight: 1.2,
-                          fontWeight: 500,
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          color: 'rgba(0,0,0,0.45)',
-                          marginBottom: '0.35rem',
-                        }}
-                      >
-                        {item.label}
-                      </div>
-
-                      {item.href ? (
-                        <a
-                          href={item.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            fontFamily: FONT_FAMILY,
-                            fontSize: FONT_SIZES.body,
-                            lineHeight: 1.3,
-                            fontWeight: 300,
-                            color: '#000000',
-                            textDecoration: 'none',
-                          }}
-                        >
-                          {item.value}
-                        </a>
-                      ) : (
-                        <div
-                          style={{
-                            fontFamily: FONT_FAMILY,
-                            fontSize: FONT_SIZES.body,
-                            lineHeight: 1.3,
-                            fontWeight: 300,
-                            color: '#000000',
-                          }}
-                        >
-                          {item.value}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+          <div className={`grid ${primaryItems.length > 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} gap-x-12 gap-y-5 items-start`}>
+            {primaryItems.map((item) => (
+              <div key={item.key}>
+                <div className="font-ibm-mono text-[11px] leading-tight font-medium tracking-[0.08em] uppercase text-white/60 mb-1">
+                  {item.label}
                 </div>
-              )}
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    target={item.key === 'instagram' ? '_blank' : undefined}
+                    rel={item.key === 'instagram' ? 'noopener noreferrer' : undefined}
+                    className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-snug font-normal text-white no-underline"
+                  >
+                    {item.value}
+                  </a>
+                ) : (
+                  <div className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-snug font-normal text-white">
+                    {item.value}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* ITEMS SECUNDARIOS */}
+          {secondaryItems.length > 0 && (
+            <div className={`grid ${secondaryItems.length > 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} gap-x-12 gap-y-5 mt-8`}>
+              {secondaryItems.map((item) => (
+                <div key={item.key}>
+                  <div className="font-ibm-mono text-[11px] leading-tight font-medium tracking-[0.08em] uppercase text-white/60 mb-1">
+                    {item.label}
+                  </div>
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-snug font-normal text-white no-underline"
+                    >
+                      {item.value}
+                    </a>
+                  ) : (
+                    <div className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-snug font-normal text-white">
+                      {item.value}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-          </motion.div>
-        </div>
+          )}
+        </motion.div>
+
       </div>
     </section>
   );

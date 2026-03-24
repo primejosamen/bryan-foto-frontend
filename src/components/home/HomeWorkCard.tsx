@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Project } from '@/models';
 import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
@@ -15,14 +16,13 @@ export default function HomeWorkCard({
   priority?: boolean;
 }) {
   const [hover, setHover] = useState(false);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [clientPos, setClientPos] = useState({ x: 0, y: 0 });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const onMove = (e: React.PointerEvent<HTMLElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setPos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    setClientPos({ x: e.clientX, y: e.clientY });
   };
 
   // ✅ Marco fijo según el diseño del cliente
@@ -32,7 +32,10 @@ export default function HomeWorkCard({
   return (
     <Link href={`/proyecto/${proyecto.slug}`} className="block">
       <motion.article
-        onPointerEnter={() => setHover(true)}
+        onPointerEnter={(e) => {
+          setHover(true);
+          setClientPos({ x: e.clientX, y: e.clientY });
+        }}
         onPointerLeave={() => setHover(false)}
         onPointerMove={onMove}
         className="relative flex-shrink-0"
@@ -54,36 +57,26 @@ export default function HomeWorkCard({
           />
         </div>
 
-        {/* Label en el cursor (tipo "kayako") */}
-        <motion.div
-          className="pointer-events-none absolute"
-          style={{
-            left: pos.x,
-            top: pos.y,
-            transform: 'translate(12px, 12px)',
-            zIndex: 100, // ✅ Muy alto para estar sobre todo
-          }}
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: hover ? 1 : 0, scale: hover ? 1 : 0.98 }}
-          transition={{ duration: 0.12 }}
-        >
-          <span
-            style={{
-              position: 'relative',
-              display: 'inline-flex',
-              alignItems: 'center',
-              fontFamily: 'IBM Plex Sans, sans-serif',
-              fontSize: 16,
-              fontWeight: 600,
-              color: '#ffffff',
-              background: '#ff0000',
-              padding: '8px 12px',
-              lineHeight: 1,
-            }}
-          >
-            {proyecto.titulo}
-          </span>
-        </motion.div>
+        {/* Label en viewport (portal): no se recorta por overflow del track */}
+        {mounted &&
+          createPortal(
+            <motion.div
+              className="pointer-events-none fixed z-[9999]"
+              style={{
+                left: clientPos.x,
+                top: clientPos.y,
+                transform: 'translate(0, 0)',
+              }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: hover ? 1 : 0, scale: hover ? 1 : 0.98 }}
+              transition={{ duration: 0.12 }}
+            >
+              <span className="block font-ibm-mono text-[23px] font-bold italic tracking-[-0.085em] text-white bg-accent px-1.5 py-0.5 leading-none whitespace-nowrap">
+                {proyecto.titulo}
+              </span>
+            </motion.div>,
+            document.body
+          )}
       </motion.article>
     </Link>
   );

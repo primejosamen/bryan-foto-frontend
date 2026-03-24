@@ -49,9 +49,10 @@ export default function HomeEditorialGift({ text, media }: Props) {
         <div
           style={{
             width: `${SLOT_W}px`,
-            fontFamily: "'IBM Plex Sans', sans-serif",
-            fontSize: '15px',
-            lineHeight: 1.7,
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: '16px',
+            lineHeight: 1.35,
+            letterSpacing: '-0.05em',
             color: '#1a1a1a',
           }}
         >

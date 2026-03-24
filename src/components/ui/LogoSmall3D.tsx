@@ -7,11 +7,16 @@ import * as THREE from 'three';
 
 import vertexShader from '@/shaders/test/vertex.glsl';
 import glassFragment from '@/shaders/case/case_glass_fragment.glsl';
+import {
+  createInputState,
+  useSceneInteraction,
+  type SceneInputState,
+} from '@/lib/hooks/useSceneInteraction';
 
 /* ─────────────────────────────────────────────
    LogoSmallScene — logo PEQUEÑO para detalle
    ───────────────────────────────────────────── */
-function LogoSmallScene() {
+function LogoSmallScene({ input }: { input: SceneInputState }) {
   const groupRef = useRef<THREE.Group>(null);
   const matsRef = useRef<THREE.ShaderMaterial[]>([]);
 
@@ -109,21 +114,13 @@ function LogoSmallScene() {
     };
   }, []);
 
-  // Parallax suave
-  const mouseRef = useRef({ x: 0, y: 0 });
-  useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      mouseRef.current.x = (e.clientX / window.innerWidth - 0.5) * 0.15;
-      mouseRef.current.y = (e.clientY / window.innerHeight - 0.5) * 0.08;
-    };
-    window.addEventListener('mousemove', handleMove);
-    return () => window.removeEventListener('mousemove', handleMove);
-  }, []);
-
+  // Parallax — uses shared input state (mouse + orientation)
   const persp = camera as THREE.PerspectiveCamera;
   useFrame(() => {
-    persp.position.x += (mouseRef.current.x - persp.position.x) * 0.05;
-    persp.position.y += (mouseRef.current.y - persp.position.y) * 0.05;
+    const targetX = input.x * 0.15;
+    const targetY = input.y * 0.08;
+    persp.position.x += (targetX - persp.position.x) * 0.05;
+    persp.position.y += (targetY - persp.position.y) * 0.05;
     persp.lookAt(0, 0, 0);
 
     for (const mat of matsRef.current) {
@@ -140,6 +137,13 @@ function LogoSmallScene() {
    esquina superior izquierda del detalle
    ───────────────────────────────────────────── */
 export default function LogoSmall3D() {
+  const inputRef = useRef<SceneInputState | null>(null);
+  if (!inputRef.current) inputRef.current = createInputState();
+  const input = inputRef.current;
+
+  // Parallax-only: no orbit interaction zone, but orientation + reduced-motion handled
+  useSceneInteraction(input);
+
   return (
     <div
       style={{
@@ -163,7 +167,7 @@ export default function LogoSmall3D() {
         }}
         dpr={[1, 2]}
       >
-        <LogoSmallScene />
+        <LogoSmallScene input={input} />
       </Canvas>
     </div>
   );

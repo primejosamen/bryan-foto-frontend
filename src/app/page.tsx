@@ -1,6 +1,8 @@
 // src/app/page.tsx
 import HomeScrollPage from '@/components/home/HomeScrollPage';
 import HomeRotatingSlots from '@/components/home/HomeRotatingSlots';
+import NavFooter from '@/components/layout/NavFooter';
+import Logo3D from '@/components/ui/Logo3D';
 import { getHomePage, getProjects } from '@/lib/api';
 
 /**
@@ -20,6 +22,10 @@ export default async function HomePage() {
 
       {/* Below: new editorial sections (scroll to reveal) */}
       {homeData && <HomeScrollPage data={homeData} />}
+
+      {/* Por encima del hero (z-5) para que el logo 3D sea visible; footer encima de todo */}
+      <Logo3D />
+      <NavFooter />
     </>
   );
 }

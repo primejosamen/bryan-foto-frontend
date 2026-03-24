@@ -50,7 +50,7 @@ export const FONT_SIZES = {
 } as const;
 
 /** Font family stack */
-export const FONT_FAMILY = "var(--font-ibm-plex-sans), 'IBM Plex Sans', sans-serif";
+export const FONT_FAMILY = "var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace";
 
 //#endregion Design tokens
 
