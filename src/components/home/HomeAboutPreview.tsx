@@ -58,7 +58,7 @@ export default function HomeAboutPreview({ image, text }: Props) {
             fontSize: '16px',
             lineHeight: 1.35,
             letterSpacing: '-0.05em',
-            color: '#1a1a1a',
+            color: '#ff0000',
             paddingTop: '60px',
           }}
         >

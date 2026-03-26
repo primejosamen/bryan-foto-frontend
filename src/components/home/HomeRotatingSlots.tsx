@@ -1,10 +1,10 @@
 'use client';
 
 import { createPortal } from 'react-dom';
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import type { Project } from '@/models';
 import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 
@@ -20,23 +20,52 @@ const NAV_BOTTOM = 65;
 const NAV_GAP = 10;
 
 /* Timing base */
-const ROTATION_INTERVAL = 4000;
-const STAGGER_DELAY = 550;
-
-/* Modulación suave (sin random agresivo) */
-const TIME_WAVE_AMPLITUDE = 420;
-const TIME_WAVE_SPEED = 0.9;
-const TIME_WAVE_PHASE_STEP = 0.85;
+const ROTATION_INTERVAL = 1570;  // pausa entre rondas
+const STAGGER_DELAY = 500;       // pausa entre slots dentro de una ronda
 
 /* Duración de transición */
-const BASE_SLIDE_DURATION = 0.98;
-const SLOT_DURATION_STEP = 0.08;
-const DURATION_WAVE_AMPLITUDE = 0.06;
+const TRANSITION_MS = 600;       // duración de la animación CSS
 
 /* Hold visual (mini pausa perceptual antes del cambio) */
-const HOLD_BASE_MS = 260;
-const HOLD_SLOT_STEP_MS = 35;
-const HOLD_WAVE_AMPLITUDE_MS = 25;
+const HOLD_MS = 120;             // anticipación muy breve
+
+/* ═══════════════════════ KEYFRAMES CSS ═══════════════════════ */
+const STYLE_ID = 'slot-cinematic-keyframes';
+
+function injectKeyframes() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(STYLE_ID)) return;
+
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = `
+    @keyframes slot-enter {
+      0% {
+        opacity: 0;
+        transform: translateX(24px) scale(1.05);
+        filter: blur(12px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+      }
+    }
+    @keyframes slot-exit {
+      0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-18px) scale(1.02);
+        filter: blur(6px);
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 /* ═══════════════════════ TIPOS ═══════════════════════════════ */
 interface Slot {
@@ -105,87 +134,64 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
 
   const [paused, setPaused] = useState(false);
 
-  /* Scheduler con modulación suave + stagger + hold perceptual */
+  /* Scheduler secuencial: slot 0 → 1 → 2 → 0 → … con intervalos fijos */
   useEffect(() => {
     if (paused || slots.length === 0) return;
 
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-    const cancelled = { current: false };
+    const rotatableIndices = slots
+      .map((s, i) => (s.projects.length > 1 ? i : -1))
+      .filter((i) => i >= 0);
 
-    slots.forEach((slot, slotIdx) => {
-      if (slot.projects.length <= 1) return;
+    if (rotatableIndices.length === 0) return;
 
-      let localTick = 0;
+    let pointer = 0;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
 
-      const scheduleNext = () => {
-        if (cancelled.current) return;
+    const tick = () => {
+      if (cancelled) return;
+      const slotIdx = rotatableIndices[pointer];
 
-        const wave = Math.sin(localTick * TIME_WAVE_SPEED + slotIdx * TIME_WAVE_PHASE_STEP);
+      setSlotPhases((prev) => {
+        const next = [...prev];
+        next[slotIdx] = 'hold';
+        return next;
+      });
 
-        const totalCycleDelay =
-          ROTATION_INTERVAL +
-          slotIdx * STAGGER_DELAY +
-          TIME_WAVE_AMPLITUDE * wave;
+      timer = setTimeout(() => {
+        if (cancelled) return;
 
-        const holdMs =
-          HOLD_BASE_MS +
-          slotIdx * HOLD_SLOT_STEP_MS +
-          HOLD_WAVE_AMPLITUDE_MS * Math.sin(localTick * 0.7 + slotIdx * 0.8);
+        setActiveIndices((prev) => {
+          const next = [...prev];
+          if (!slots[slotIdx]) return prev;
+          next[slotIdx] = (next[slotIdx] + 1) % slots[slotIdx].projects.length;
+          return next;
+        });
 
-        const visibleHoldDelay = Math.max(2200, totalCycleDelay - holdMs);
+        setSlotTicks((prev) => {
+          const next = [...prev];
+          next[slotIdx] = (next[slotIdx] ?? 0) + 1;
+          return next;
+        });
 
-        // 1) espera principal (la portada “respira” normal)
-        const t1 = setTimeout(() => {
-          if (cancelled.current) return;
+        setSlotPhases((prev) => {
+          const next = [...prev];
+          next[slotIdx] = 'idle';
+          return next;
+        });
 
-          // 2) entrar en fase HOLD (mini pausa perceptual / anticipación)
-          setSlotPhases((prev) => {
-            const next = [...prev];
-            next[slotIdx] = 'hold';
-            return next;
-          });
+        pointer = (pointer + 1) % rotatableIndices.length;
+        // Si completó una ronda, pausa larga; si no, stagger corto
+        const nextDelay = pointer === 0 ? ROTATION_INTERVAL : STAGGER_DELAY;
+        timer = setTimeout(tick, nextDelay);
+      }, HOLD_MS);
+    };
 
-          // 3) al terminar el hold, ejecutar el cambio
-          const t2 = setTimeout(() => {
-            if (cancelled.current) return;
-
-            setActiveIndices((prev) => {
-              const next = [...prev];
-              if (!slots[slotIdx]) return prev;
-              next[slotIdx] = (next[slotIdx] + 1) % slots[slotIdx].projects.length;
-              return next;
-            });
-
-            setSlotTicks((prev) => {
-              const next = [...prev];
-              next[slotIdx] = (next[slotIdx] ?? 0) + 1;
-              return next;
-            });
-
-            setSlotPhases((prev) => {
-              const next = [...prev];
-              next[slotIdx] = 'idle';
-              return next;
-            });
-
-            localTick += 1;
-            scheduleNext();
-          }, Math.max(180, holdMs));
-
-          timeouts.push(t2);
-        }, visibleHoldDelay);
-
-        timeouts.push(t1);
-      };
-
-      const initialDelay = 450 + slotIdx * 300;
-      const t0 = setTimeout(scheduleNext, initialDelay);
-      timeouts.push(t0);
-    });
+    timer = setTimeout(tick, ROTATION_INTERVAL);
 
     return () => {
-      cancelled.current = true;
-      timeouts.forEach(clearTimeout);
+      cancelled = true;
+      clearTimeout(timer);
     };
   }, [paused, slots]);
 
@@ -234,6 +240,32 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
                 slotTick={slotTicks[slotIdx] ?? 0}
                 slotPhase={slotPhases[slotIdx] ?? 'idle'}
                 fullWidth={isSingleSlot}
+                onPrev={() => {
+                  setActiveIndices((prev) => {
+                    const next = [...prev];
+                    const len = slots[slotIdx]?.projects.length ?? 1;
+                    next[slotIdx] = (next[slotIdx] - 1 + len) % len;
+                    return next;
+                  });
+                  setSlotTicks((prev) => {
+                    const next = [...prev];
+                    next[slotIdx] = (next[slotIdx] ?? 0) + 1;
+                    return next;
+                  });
+                }}
+                onNext={() => {
+                  setActiveIndices((prev) => {
+                    const next = [...prev];
+                    const len = slots[slotIdx]?.projects.length ?? 1;
+                    next[slotIdx] = (next[slotIdx] + 1) % len;
+                    return next;
+                  });
+                  setSlotTicks((prev) => {
+                    const next = [...prev];
+                    next[slotIdx] = (next[slotIdx] ?? 0) + 1;
+                    return next;
+                  });
+                }}
               />
             ))}
           </div>
@@ -251,6 +283,8 @@ function CoverSlot({
   slotTick,
   slotPhase,
   fullWidth,
+  onPrev,
+  onNext,
 }: {
   slot: Slot;
   activeIndex: number;
@@ -258,6 +292,8 @@ function CoverSlot({
   slotTick: number;
   slotPhase: SlotPhase;
   fullWidth?: boolean;
+  onPrev: () => void;
+  onNext: () => void;
 }) {
   const safeIndex = activeIndex % slot.projects.length;
   const activeProject = slot.projects[safeIndex];
@@ -267,26 +303,28 @@ function CoverSlot({
   const [hover, setHover] = useState(false);
   const [labelClient, setLabelClient] = useState({ x: 0, y: 0 });
   const [mounted, setMounted] = useState(false);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [animKey, setAnimKey] = useState(0);
+  const prevActiveRef = useRef(safeIndex);
 
   useEffect(() => setMounted(true), []);
+  useEffect(() => injectKeyframes(), []);
+
+  /* Detectar cambio de imagen y guardar la anterior */
+  useEffect(() => {
+    if (safeIndex !== prevActiveRef.current) {
+      setPrevIndex(prevActiveRef.current);
+      setAnimKey((k) => k + 1);
+      prevActiveRef.current = safeIndex;
+
+      const t = setTimeout(() => setPrevIndex(null), TRANSITION_MS);
+      return () => clearTimeout(t);
+    }
+  }, [safeIndex]);
 
   const onMove = (e: React.PointerEvent<HTMLElement>) => {
     setLabelClient({ x: e.clientX + 12, y: e.clientY + 12 });
   };
-
-  /* Duración ligeramente distinta por slot + pequeña modulación */
-  const durationWave = Math.sin(slotTick * 0.65 + slotIndex * 0.9);
-  const slideDuration =
-    BASE_SLIDE_DURATION +
-    slotIndex * SLOT_DURATION_STEP +
-    DURATION_WAVE_AMPLITUDE * durationWave;
-
-  /* Easing estándar/suave */
-  const softEases: [number, number, number, number][] = [
-    [0.37, 0, 0.63, 1],
-    [0.4, 0, 0.6, 1],
-  ];
-  const slideEase = softEases[(slotIndex + slotTick) % softEases.length];
 
   return (
     <Link
@@ -303,51 +341,85 @@ function CoverSlot({
       onPointerMove={onMove}
     >
       <div className="absolute inset-0 z-0 overflow-hidden">
-        {/* Wrapper de HOLD visual: mini “suspensión” antes del slide */}
-        <motion.div
-          className="absolute inset-0 z-1"
-          animate={
-            slotPhase === 'hold'
-              ? { scale: 1.006, y: -2, filter: 'brightness(0.985)' }
-              : { scale: 1, y: 0, filter: 'brightness(1)' }
-          }
-          transition={{ duration: 0.2, ease: 'easeInOut' }}
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={activeProject.id}
-              className="absolute inset-0"
-              initial={{ y: '100%', opacity: 0.92, scale: 1.008 }}
-              animate={{ y: '0%', opacity: 1, scale: 1 }}
-              exit={{ y: '-100%', opacity: 0.92, scale: 1.004 }}
-              transition={{
-                duration: slideDuration,
-                ease: slideEase,
-              }}
-            >
-              <Image
-                src={getStrapiImageUrl(activeProject.foto_portada)}
-                alt={activeProject.titulo}
-                fill
-                className="object-cover"
-                sizes={fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`}
-                quality={100}
-                priority={slotIndex < 3 || fullWidth}
-              />
-            </motion.div>
-          </AnimatePresence>
-        </motion.div>
+        {/* Imagen saliente — cinematic exit */}
+        {prevIndex !== null && (
+          <div
+            key={`exit-${animKey}`}
+            className="absolute inset-0"
+            style={{
+              animation: `slot-exit ${TRANSITION_MS}ms cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+              zIndex: 1,
+            }}
+          >
+            <Image
+              src={getStrapiImageUrl(slot.projects[prevIndex].foto_portada)}
+              alt={slot.projects[prevIndex].titulo}
+              fill
+              className="object-cover"
+              sizes={fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`}
+              quality={100}
+            />
+          </div>
+        )}
 
-        {/* Overlay sutil de hold (apenas perceptible, editorial) */}
-        <motion.div
-          className="pointer-events-none absolute inset-0 z-2"
+        {/* Imagen entrante — cinematic enter */}
+        <div
+          key={`enter-${animKey}`}
+          className="absolute inset-0"
+          style={{
+            animation:
+              animKey > 0
+                ? `slot-enter ${TRANSITION_MS}ms cubic-bezier(0.4, 0, 0.2, 1) forwards`
+                : undefined,
+            zIndex: 2,
+          }}
+        >
+          <Image
+            src={getStrapiImageUrl(activeProject.foto_portada)}
+            alt={activeProject.titulo}
+            fill
+            className="object-cover"
+            sizes={fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`}
+            quality={100}
+            priority={slotIndex < 3 || fullWidth}
+          />
+        </div>
+
+        {/* Overlay sutil editorial */}
+        <div
+          className="pointer-events-none absolute inset-0 z-3"
           style={{
             background:
               'linear-gradient(to top, rgba(0,0,0,0.08), rgba(0,0,0,0.02) 30%, rgba(0,0,0,0))',
+            opacity: 0.25,
           }}
-          animate={{ opacity: slotPhase === 'hold' ? 0.55 : 0.25 }}
-          transition={{ duration: 0.18, ease: 'easeInOut' }}
         />
+
+        {/* Botones slider — prev / next */}
+        {hasMultiple && (
+          <>
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPrev(); }}
+              className="absolute left-3 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center text-red-500 drop-shadow-lg transition-all hover:text-red-600 hover:scale-110 pointer-events-auto"
+              aria-label="Anterior"
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNext(); }}
+              className="absolute right-3 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center text-red-500 drop-shadow-lg transition-all hover:text-red-600 hover:scale-110 pointer-events-auto"
+              aria-label="Siguiente"
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </>
+        )}
 
         {/* Indicadores */}
         {hasMultiple && (

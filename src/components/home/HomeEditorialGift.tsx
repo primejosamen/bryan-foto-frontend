@@ -50,7 +50,7 @@ export default function HomeEditorialGift({ text, media }: Props) {
             fontSize: '16px',
             lineHeight: 1.35,
             letterSpacing: '-0.05em',
-            color: '#1a1a1a',
+            color: '#ff0000',
           }}
         >
           {renderBlocks(text)}
