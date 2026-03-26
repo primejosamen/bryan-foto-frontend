@@ -38,17 +38,14 @@ export default function HomeEditorialGift({ text, media }: Props) {
 
   return (
     <section
-      style={{
-        width: `${TOTAL_W}px`,
-        display: 'flex',
-        alignItems: 'flex-start',
-      }}
+      className="w-full flex flex-col gap-6 px-4 md:px-0 md:flex-row md:gap-0 md:items-start"
+      style={{ maxWidth: `${TOTAL_W}px` }}
     >
-      {/* Col 1: Texto editorial (472px) */}
+      {/* Col 1: Texto editorial */}
       <ScrollReveal delay={0}>
         <div
+          className="w-full md:w-[472px]"
           style={{
-            width: `${SLOT_W}px`,
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: '16px',
             lineHeight: 1.35,
@@ -60,18 +57,13 @@ export default function HomeEditorialGift({ text, media }: Props) {
         </div>
       </ScrollReveal>
 
-      {/* Col 2: Espacio vacío (gap + 472 + gap) */}
-      <div style={{ width: `${SLOT_GAP + SLOT_W + SLOT_GAP}px`, flexShrink: 0 }} />
+      {/* Col 2: Espacio vacío (solo desktop) */}
+      <div className="hidden md:block md:shrink-0" style={{ width: `${SLOT_GAP + SLOT_W + SLOT_GAP}px` }} />
 
-      {/* Col 3: Gif / Video (472px) */}
+      {/* Col 3: Gif / Video */}
       <ScrollReveal delay={250}>
         <div
-          style={{
-            width: `${SLOT_W}px`,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-          }}
+          className="w-full md:w-[472px] flex justify-center items-start"
         >
           {video ? (
             <video
@@ -80,20 +72,16 @@ export default function HomeEditorialGift({ text, media }: Props) {
               loop
               muted
               playsInline
+              className="w-full md:w-[472px]"
               style={{
-                width: `${SLOT_W}px`,
-                height: `${MEDIA_H}px`,
+                aspectRatio: `${SLOT_W} / ${MEDIA_H}`,
                 objectFit: 'cover',
               }}
             />
           ) : (
             <div
-              style={{
-                width: `${SLOT_W}px`,
-                height: `${MEDIA_H}px`,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
+              className="relative w-full overflow-hidden md:w-[472px]"
+              style={{ aspectRatio: `${SLOT_W} / ${MEDIA_H}` }}
             >
               {media.mime === 'image/gif' ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -112,7 +100,7 @@ export default function HomeEditorialGift({ text, media }: Props) {
                   alt="Media content"
                   fill
                   style={{ objectFit: 'cover' }}
-                  sizes={`${SLOT_W}px`}
+                  sizes="(max-width: 768px) 100vw, 472px"
                   quality={100}
                 />
               )}

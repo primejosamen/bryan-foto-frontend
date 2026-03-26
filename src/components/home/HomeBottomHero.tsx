@@ -20,22 +20,21 @@ interface Props {
 
 export default function HomeBottomHero({ image }: Props) {
   return (
-    <section style={{ width: `${TOTAL_W}px` }}>
+    <section
+      className="w-full px-4 md:px-0"
+      style={{ maxWidth: `${TOTAL_W}px` }}
+    >
       <ScrollReveal>
         <div
-          style={{
-            width: '100%',
-            height: `${IMG_H}px`,
-            position: 'relative',
-            overflow: 'hidden',
-          }}
+          className="relative w-full overflow-hidden"
+          style={{ aspectRatio: `${TOTAL_W} / ${IMG_H}` }}
         >
           <Image
             src={getStrapiImageUrl(image)}
             alt="Bottom hero"
             fill
             style={{ objectFit: 'cover' }}
-            sizes={`${TOTAL_W}px`}
+            sizes="(max-width: 768px) 100vw, 1436px"
             quality={100}
           />
         </div>

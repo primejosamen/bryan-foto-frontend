@@ -23,20 +23,17 @@ function LogoScene({ input }: { input: SceneInputState }) {
 
   const { camera, gl, scene, size } = useThree();
 
-  /* ── Responsive: escalar logo según ancho del viewport ── */
-  const BASE_WIDTH = 1920;
+  /* ── Responsive: escalar logo según el frustum visible de la cámara ── */
   const isMobile = size.width < 768;
 
-  const responsiveScale = useMemo(() => {
-    const w = size.width;
-    if (w < 768) {
-      // Móvil: proporción legible y centrado (antes quedaba fuera de encuadre por X alto)
-      const ratio = Math.min(w / 420, 1.2);
-      return Math.max(0.38, Math.min(ratio * 0.88, 1.05));
-    }
-    const ratio = Math.min(w / BASE_WIDTH, 1);
-    return Math.max(0.45, ratio);
-  }, [size.width]);
+  /* FOV fijo + aspect correcto */
+  const FOV = 60;
+  useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    cam.fov = FOV;
+    cam.aspect = size.width / Math.max(size.height, 1);
+    cam.updateProjectionMatrix();
+  }, [camera, size.width, size.height]);
 
   // Env map
   const envMap = useCubeTexture(
@@ -65,14 +62,6 @@ function LogoScene({ input }: { input: SceneInputState }) {
     [isMobile]
   );
   const cameraLerp = 0.05;
-
-  /* Móvil: FOV algo más cerrado + aspect correcto para que el logo encaje en proporción */
-  useEffect(() => {
-    const cam = camera as THREE.PerspectiveCamera;
-    cam.fov = isMobile ? 48 : 60;
-    cam.aspect = size.width / Math.max(size.height, 1);
-    cam.updateProjectionMatrix();
-  }, [camera, isMobile, size.width, size.height]);
 
   // GLB — logo grande ÚNICO
   const { scene: gltfScene } = useGLTF('/cdcase/logobt2.glb');
@@ -121,12 +110,30 @@ function LogoScene({ input }: { input: SceneInputState }) {
       child.renderOrder = 10;
     });
 
-    // Desktop: logo desplazado a la derecha. Móvil: centrado en X para que no se salga del encuadre
-    const s = (isMobile ? 1.58 : 1.7) * responsiveScale;
-    const xPos = isMobile ? 0 : 4.05 * responsiveScale;
-    const yPos = isMobile ? 4.42 : 5.5;
-    logo.position.set(xPos, yPos, -5.0);
-    logo.rotation.set(0, 0, 0);
+    // Calcular el ancho visible del frustum a la profundidad Z del logo
+    // y escalar para que ocupe ~85% del ancho visible (funciona en todos los aspect ratios)
+    const logoZ = -5.0;
+    const camZ = cameraBasePos.z;
+    const dist = camZ - logoZ;                                     // distancia cámara → logo
+    const fovRad = THREE.MathUtils.degToRad(FOV);
+    const aspect = size.width / Math.max(size.height, 1);
+    const visibleHeight = 2 * Math.tan(fovRad / 2) * dist;
+    const visibleWidth = visibleHeight * aspect;
+
+    // Medir el ancho intrínseco del logo a escala 1
+    logo.scale.set(1, 1, 1);
+    const rawBox = new THREE.Box3().setFromObject(logo);
+    const rawWidth = rawBox.max.x - rawBox.min.x;
+
+    // Escalar para que el logo llene el 85% del ancho visible
+    const TARGET_FILL = 0.85;
+    const s = (visibleWidth * TARGET_FILL) / Math.max(rawWidth, 0.01);
+
+    // Centrar el logo en el frustum visible
+    const rawCenter = rawBox.getCenter(new THREE.Vector3());
+    const yPos = rawCenter.y;  // se centrará con lookAt de la cámara
+
+    logo.position.set(-rawCenter.x * s, -rawCenter.y * s, logoZ);
     logo.scale.set(s, s, s);
 
     if (groupRef.current) {
@@ -139,7 +146,7 @@ function LogoScene({ input }: { input: SceneInputState }) {
       const box = new THREE.Box3().setFromObject(groupRef.current);
       box.getCenter(logoCenterRef.current);
     }
-  }, [logo, createGlassMaterial, responsiveScale, size.width, isMobile]);
+  }, [logo, createGlassMaterial, size.width, size.height]);
 
   // Limpiar al desmontar
   useEffect(() => {
@@ -201,19 +208,31 @@ export default function Logo3D() {
   const { isDragging, startOrbit, requestOrientationPermission } =
     useSceneInteraction(input);
 
-  /* Móvil: el offset -600 recortaba mal el frame; menos desplazamiento = logo visible en la franja superior */
-  const [canvasTopOffset, setCanvasTopOffset] = useState(-600);
+  /* Centrar el logo en la franja del header (170px desktop / 120px móvil).
+     El logo queda centrado verticalmente en el canvas (100vh), así que
+     desplazamos el canvas para que ese centro caiga en la mitad del header. */
+  const HEADER_H_DESKTOP = 170;
+  const HEADER_H_MOBILE  = 120;
   const [isMobileLayout, setIsMobileLayout] = useState(false);
+  const [canvasTopOffset, setCanvasTopOffset] = useState(-400);
   useLayoutEffect(() => {
+    const getOffset = (narrow: boolean) => {
+      const hc = narrow ? HEADER_H_MOBILE / 2 : HEADER_H_DESKTOP / 2;
+      return -(window.innerHeight / 2) + hc;
+    };
     const mq = window.matchMedia('(max-width: 767px)');
     const apply = () => {
       const narrow = mq.matches;
       setIsMobileLayout(narrow);
-      setCanvasTopOffset(narrow ? -240 : -600);
+      setCanvasTopOffset(getOffset(narrow));
     };
     apply();
+    window.addEventListener('resize', apply);
     mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
+    return () => {
+      window.removeEventListener('resize', apply);
+      mq.removeEventListener('change', apply);
+    };
   }, []);
 
   return (
@@ -258,7 +277,7 @@ export default function Logo3D() {
           top: 0,
           left: 0,
           right: 0,
-          height: isMobileLayout ? 160 : 270,
+          height: isMobileLayout ? HEADER_H_MOBILE : HEADER_H_DESKTOP,
           zIndex: 16,
           pointerEvents: 'auto',
           cursor: isDragging ? 'grabbing' : 'grab',

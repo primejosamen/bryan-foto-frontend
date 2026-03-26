@@ -147,11 +147,11 @@ export default function LogoSmall3D() {
   return (
     <div
       style={{
-        position: 'absolute',
-        top: 55,
-        left: -195,
-        width: '1000px',
-        height: '200px',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '120px',
         zIndex: 50,
         pointerEvents: 'none',
       }}

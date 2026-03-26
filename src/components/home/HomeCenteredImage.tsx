@@ -25,26 +25,20 @@ interface Props {
 export default function HomeCenteredImage({ image }: Props) {
   return (
     <section
-      style={{
-        width: `${TOTAL_W}px`,
-      }}
+      className="w-full px-4 md:px-0"
+      style={{ maxWidth: `${TOTAL_W}px` }}
     >
       <ScrollReveal>
         <div
-          style={{
-            marginLeft: `${LEFT_OFFSET}px`,
-            width: `${SLOT_W}px`,
-            height: `${IMG_H}px`,
-            position: 'relative',
-            overflow: 'hidden',
-          }}
+          className="relative w-full overflow-hidden md:w-[472px] md:ml-[482px]"
+          style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
         >
           <Image
             src={getStrapiImageUrl(image)}
             alt="Centered feature"
             fill
             style={{ objectFit: 'cover' }}
-            sizes={`${SLOT_W}px`}
+            sizes="(max-width: 768px) 100vw, 472px"
             quality={100}
           />
         </div>

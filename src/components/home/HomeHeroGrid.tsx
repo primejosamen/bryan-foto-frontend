@@ -28,28 +28,21 @@ export default function HomeHeroGrid({ image1, image2, image3 }: Props) {
 
   return (
     <section
-      style={{
-        width: `${TOTAL_W}px`,
-        display: 'flex',
-        gap: `${GAP}px`,
-      }}
+      className="w-full flex flex-col gap-2 px-4 md:px-0 md:flex-row md:gap-[10px]"
+      style={{ maxWidth: `${TOTAL_W}px` }}
     >
       {images.map((img, i) => (
         <ScrollReveal key={i} delay={i * 150}>
           <div
-            style={{
-              width: `${SLOT_W}px`,
-              height: `${IMG_H}px`,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
+            className="relative w-full overflow-hidden md:w-[472px]"
+            style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
           >
             <Image
               src={getStrapiImageUrl(img)}
               alt={`Hero ${i + 1}`}
               fill
               style={{ objectFit: 'cover' }}
-              sizes={`${SLOT_W}px`}
+              sizes="(max-width: 768px) 100vw, 472px"
               quality={100}
             />
           </div>

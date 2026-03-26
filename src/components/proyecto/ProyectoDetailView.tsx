@@ -183,10 +183,9 @@ export default function ProyectoDetailView({ proyecto }: Props) {
 
       {/* Thumbnail nav is now in column 3 of the grid */}
 
-      {/* 3-column grid: title | images | thumbnails */}
-      {/* Session info bar — fixed centered, 3 columns each left-aligned */}
-      <div className="relative z-10 flex flex-col gap-2 px-4 pt-14 pb-4 md:fixed md:top-1/2 md:-translate-y-1/2 md:left-0 md:right-0 md:pointer-events-none md:px-10 md:pt-0 md:pb-0 md:grid md:grid-cols-[1fr_2fr_1fr] md:gap-10">
-        <div className="flex items-center">
+      {/* Session info bar — vertically centered on all devices */}
+      <div className="fixed z-10 left-0 right-0 top-1/2 -translate-y-1/2 flex flex-col items-end pointer-events-none px-4 md:items-stretch md:px-10 md:grid md:grid-cols-[1fr_2fr_1fr] md:gap-10">
+        <div className="flex items-center self-start md:self-auto">
           <h1 className="font-ibm-mono text-[clamp(2rem,4.5vw,64px)] font-bold italic leading-tight text-red-500 tracking-[-0.085em]">
             {proyecto.titulo}
           </h1>
@@ -198,7 +197,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
             </p>
           )}
         </div>
-        <div className="hidden md:flex items-center">
+        <div className=" md:flex items-center">
           <span className="font-ibm-mono font-bold text-[clamp(0.625rem,0.8vw,11px)] uppercase tracking-[0.12em] text-red-500">
             {todasLasFotos.length} fotos
           </span>
@@ -269,29 +268,6 @@ export default function ProyectoDetailView({ proyecto }: Props) {
           </div>
         </div>
       </div>
-
-      {/* Footer nav */}
-      <footer className="relative z-20 px-4 md:px-20 py-10 md:py-20 border-t border-black/10">
-        <Link
-          href="/"
-          className="group inline-flex items-center gap-4 font-ibm-mono text-[16px]"
-        >
-          <span className="text-red-500 group-hover:text-red-700 transition-colors">
-            Ver todos los proyectos
-          </span>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="transform group-hover:translate-x-2 transition-transform text-red-500"
-          >
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </Link>
-      </footer>
 
       {/* Progress bar */}
       <ProgressBar total={todasLasFotos.length} activeIndex={activeIndex} />

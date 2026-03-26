@@ -21,7 +21,7 @@ export default function NavFooter() {
             <Link
               key={link.href}
               href={link.href}
-              className="relative inline-flex items-center font-ibm-mono text-[1.414rem] font-bold italic leading-none transition-opacity md:text-[1.4rem] tracking-[-0.07em] px-3 py-1"
+              className="relative inline-flex items-center font-ibm-mono text-[1.1rem] font-bold italic leading-none transition-opacity md:text-[1.4rem] tracking-[-0.07em] px-3 py-1"
             >
               {isActive && (
                 <motion.span

@@ -26,42 +26,34 @@ interface Props {
 export default function HomeAboutPreview({ image, text }: Props) {
   return (
     <section
-      style={{
-        width: `${TOTAL_W}px`,
-        display: 'flex',
-        alignItems: 'flex-start',
-      }}
+      className="w-full flex flex-col gap-6 px-4 md:px-0 md:flex-row md:gap-0 md:items-start"
+      style={{ maxWidth: `${TOTAL_W}px` }}
     >
-      {/* Col 1: Imagen (472px) */}
+      {/* Col 1: Imagen */}
       <ScrollReveal delay={0}>
         <div
-          style={{
-            width: `${SLOT_W}px`,
-            height: `${IMG_H}px`,
-            position: 'relative',
-            overflow: 'hidden',
-            flexShrink: 0,
-          }}
+          className="relative w-full overflow-hidden md:w-[472px] md:shrink-0"
+          style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
         >
           <Image
             src={getStrapiImageUrl(image)}
             alt="About preview"
             fill
             style={{ objectFit: 'cover' }}
-            sizes={`${SLOT_W}px`}
+            sizes="(max-width: 768px) 100vw, 472px"
             quality={100}
           />
         </div>
       </ScrollReveal>
 
-      {/* Col 2: Espacio vacío (gap + 472 + gap = 492px) */}
-      <div style={{ width: `${SLOT_GAP + SLOT_W + SLOT_GAP}px`, flexShrink: 0 }} />
+      {/* Col 2: Espacio vacío (solo desktop) */}
+      <div className="hidden md:block md:shrink-0" style={{ width: `${SLOT_GAP + SLOT_W + SLOT_GAP}px` }} />
 
-      {/* Col 3: Texto (472px) */}
+      {/* Col 3: Texto */}
       <ScrollReveal delay={300}>
         <div
+          className="w-full md:w-[472px]"
           style={{
-            width: `${SLOT_W}px`,
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: '16px',
             lineHeight: 1.35,

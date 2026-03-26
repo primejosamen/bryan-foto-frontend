@@ -25,27 +25,20 @@ interface Props {
 export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {
   return (
     <section
-      style={{
-        width: `${TOTAL_W}px`,
-        display: 'flex',
-        gap: `${GAP}px`,
-      }}
+      className="w-full flex flex-col gap-2 px-4 md:px-0 md:flex-row md:gap-[10px]"
+      style={{ maxWidth: `${TOTAL_W}px` }}
     >
       <ScrollReveal delay={0}>
         <div
-          style={{
-            width: `${HALF_W}px`,
-            height: `${IMG_H}px`,
-            position: 'relative',
-            overflow: 'hidden',
-          }}
+          className="relative w-full overflow-hidden md:w-[713px]"
+          style={{ aspectRatio: `${HALF_W} / ${IMG_H}` }}
         >
           <Image
             src={getStrapiImageUrl(imageLeft)}
             alt="Featured left"
             fill
             style={{ objectFit: 'cover' }}
-            sizes={`${HALF_W}px`}
+            sizes="(max-width: 768px) 100vw, 713px"
             quality={100}
           />
         </div>
@@ -53,19 +46,15 @@ export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {
 
       <ScrollReveal delay={200}>
         <div
-          style={{
-            width: `${HALF_W}px`,
-            height: `${IMG_H}px`,
-            position: 'relative',
-            overflow: 'hidden',
-          }}
+          className="relative w-full overflow-hidden md:w-[713px]"
+          style={{ aspectRatio: `${HALF_W} / ${IMG_H}` }}
         >
           <Image
             src={getStrapiImageUrl(imageRight)}
             alt="Featured right"
             fill
             style={{ objectFit: 'cover' }}
-            sizes={`${HALF_W}px`}
+            sizes="(max-width: 768px) 100vw, 713px"
             quality={100}
           />
         </div>
