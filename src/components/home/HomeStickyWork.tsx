@@ -158,9 +158,10 @@ function HomeNavLink({ href, children }: { href: string; children: React.ReactNo
         position: 'relative',
         display: 'inline-flex',
         alignItems: 'center',
-        fontFamily: 'IBM Plex Sans, sans-serif',
+        fontFamily: "'IBM Plex Mono', monospace",
         fontSize: 16,
-        fontWeight: 600,
+        fontWeight: 400,
+        letterSpacing: '-0.05em',
         color: '#ffffff',
       }}
     >

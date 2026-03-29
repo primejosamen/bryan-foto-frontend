@@ -1,22 +1,17 @@
 /* src/app/globals.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --font-ibm-plex-sans: 'IBM Plex Sans', sans-serif;
-  
-  /* Tamaños de fuente según el diseño */
-  --text-body: 24px;      /* 18pt = 24px */
-  --text-title: 57px;     /* 42.7pt = 57px */
-  --text-small: 14px;
-  --text-nav: 16px;
+@theme {
+  --color-accent: #ff0000;
+  --font-ibm: 'IBM Plex Sans', sans-serif;
+  --font-ibm-mono: 'IBM Plex Mono', monospace;
+  --font-size-body: 24px;
+  --font-size-title: 57px;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Cursor cuadrado global (12×12 px, hotspot centrado; fallback crosshair) */
+:root {
+  --cursor-square: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Crect width='12' height='12' fill='%23ff0000'/%3E%3C/svg%3E") 6 6, crosshair;
 }
 
 html {
@@ -24,10 +19,25 @@ html {
 }
 
 body {
-  font-family: var(--font-ibm-plex-sans);
-  background-color: #ffffff; /* ✅ mejor para el home */
-  color: #000000;
+  font-family: var(--font-ibm);
   overflow-x: hidden;
+  cursor: var(--cursor-square);
+}
+
+/* Misma marca en interactivos; en campos de texto vuelve el I-beam */
+a,
+button,
+[role='button'],
+label[for],
+summary {
+  cursor: var(--cursor-square);
+}
+
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  cursor: text;
 }
 
 /* Scrollbar personalizada */
@@ -61,19 +71,17 @@ a {
 }
 
 /* Imágenes */
-img {
+img, video, canvas, audio, iframe, embed, object {
+  display: block;
   max-width: 100%;
-  height: auto;
 }
 
-/* Animación suave para todos los elementos */
-* {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+/* Canvas Three.js */
+canvas {
+  touch-action: none;
 }
 
-/* Clase para ocultar scrollbar pero mantener funcionalidad */
+/* Utilidad para ocultar scrollbar */
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -81,26 +89,4 @@ img {
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
-}
-
-/* Utilidades personalizadas */
-@layer utilities {
-  .text-body {
-    font-size: var(--text-body);
-    line-height: 1.6;
-  }
-
-  .text-title {
-    font-size: var(--text-title);
-    line-height: 1.2;
-  }
-
-  .font-ibm {
-    font-family: var(--font-ibm-plex-sans);
-  }
-}
-
-/* Estilos para el canvas de Three.js */
-canvas {
-  touch-action: none;
 }

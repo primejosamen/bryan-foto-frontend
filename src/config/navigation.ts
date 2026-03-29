@@ -27,6 +27,7 @@ export interface NavLink {
 
 /** Main site navigation links */
 export const NAV_LINKS: NavLink[] = [
+  { href: ROUTES.home, label: 'Home' },
   { href: ROUTES.about, label: 'About' },
   { href: ROUTES.contact, label: 'Contact' },
 ] as const;

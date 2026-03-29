@@ -10,3 +10,4 @@ export { getProjects, getProjectBySlug } from './projects.api';
 export { getAbout } from './about.api';
 export { getContact } from './contact.api';
 export { getGlobalConfig } from './global.api';
+export { getHomePage } from './home-page.api';

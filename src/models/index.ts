@@ -9,3 +9,4 @@ export type { Project, StrapiImage, ImageFormat } from './project.model';
 export type { About, AboutBlock } from './about.model';
 export type { ContactInfo } from './contact.model';
 export type { GlobalConfig } from './global.model';
+export type { HomePage, StrapiBlock, StrapiBlockChild, StrapiMedia } from './home-page.model';
