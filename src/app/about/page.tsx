@@ -5,7 +5,7 @@
  */
 import AboutSection from '@/components/about/AboutSection';
 import { getAbout } from '@/lib/api';
-import { REVALIDATE_INTERVAL } from '@/config/constants';
+//import { REVALIDATE_INTERVAL } from '@/config/constants';
 
 export default async function AboutPage() {
   const about = await getAbout();
@@ -18,4 +18,4 @@ export const metadata = {
   description: 'Conoce más sobre Bryan Photography',
 };
 
-export const revalidate = REVALIDATE_INTERVAL;
+export const revalidate = 60;
