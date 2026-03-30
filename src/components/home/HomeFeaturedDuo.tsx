@@ -3,14 +3,14 @@
 /**
  * Section 2 — Featured Duo: 2 large images side by side.
  * Each image takes roughly half the total width.
+ * Supports multiple images per side with arrow carousel.
  *
  * @module components/home/HomeFeaturedDuo
  */
 
-import Image from 'next/image';
 import type { StrapiImage } from '@/models';
-import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 import ScrollReveal from './ScrollReveal';
+import ImageCarousel from '@/components/ui/ImageCarousel';
 
 const TOTAL_W = 1436;
 const GAP = 10;
@@ -18,8 +18,8 @@ const HALF_W = (TOTAL_W - GAP) / 2; // 713
 const IMG_H = 860;
 
 interface Props {
-  imageLeft: StrapiImage;
-  imageRight: StrapiImage;
+  imageLeft: StrapiImage | StrapiImage[];
+  imageRight: StrapiImage | StrapiImage[];
 }
 
 export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {
@@ -33,13 +33,10 @@ export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {
           className="relative w-full overflow-hidden md:w-[713px]"
           style={{ aspectRatio: `${HALF_W} / ${IMG_H}` }}
         >
-          <Image
-            src={getStrapiImageUrl(imageLeft)}
+          <ImageCarousel
+            images={imageLeft}
             alt="Featured left"
-            fill
-            style={{ objectFit: 'cover' }}
             sizes="(max-width: 768px) 100vw, 713px"
-            quality={100}
           />
         </div>
       </ScrollReveal>
@@ -49,13 +46,10 @@ export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {
           className="relative w-full overflow-hidden md:w-[713px]"
           style={{ aspectRatio: `${HALF_W} / ${IMG_H}` }}
         >
-          <Image
-            src={getStrapiImageUrl(imageRight)}
+          <ImageCarousel
+            images={imageRight}
             alt="Featured right"
-            fill
-            style={{ objectFit: 'cover' }}
             sizes="(max-width: 768px) 100vw, 713px"
-            quality={100}
           />
         </div>
       </ScrollReveal>

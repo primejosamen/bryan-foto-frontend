@@ -49,9 +49,9 @@ export interface HomePage {
   hero_image_2: StrapiImage;
   hero_image_3: StrapiImage;
 
-  /* Section 2: Featured Duo — 2 large images */
-  featured_image_left: StrapiImage;
-  featured_image_right: StrapiImage;
+  /* Section 2: Featured Duo — 2 large images (or arrays for carousel) */
+  featured_image_left: StrapiImage | StrapiImage[];
+  featured_image_right: StrapiImage | StrapiImage[];
 
   /* Section 3: About Preview — image + text */
   about_image: StrapiImage;
@@ -64,6 +64,6 @@ export interface HomePage {
   editorial_text: StrapiBlock[];
   gift_media: StrapiMedia;
 
-  /* Section 6: Bottom Hero */
-  bottom_hero_image: StrapiImage;
+  /* Section 6: Bottom Hero (single or array for carousel) */
+  bottom_hero_image: StrapiImage | StrapiImage[];
 }
