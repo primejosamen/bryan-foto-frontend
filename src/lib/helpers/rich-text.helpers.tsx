@@ -60,7 +60,7 @@ function renderChildren(children: StrapiBlockChild[]): React.ReactNode {
     if (child.type === 'text') {
       let node: React.ReactNode = child.text ?? '';
       if (child.bold) node = <strong key={i}>{node}</strong>;
-      if (child.italic) node = <em key={i}>{node}</em>;
+      if (child.italic) node = <span key={i}>{node}</span>;
       if (child.underline) node = <u key={i}>{node}</u>;
       return node;
     }

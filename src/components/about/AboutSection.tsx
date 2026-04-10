@@ -10,21 +10,23 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { About } from '@/models';
+import type { ContactInfo } from '@/models';
 import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 import LogoAbout3D from '@/components/ui/LogoAbout3D';
-import NavFooter from '@/components/layout/NavFooter';
 
 //#region Types
 
 interface AboutSectionProps {
   about: About | null;
+  contacto: ContactInfo | null;
 }
 
 //#endregion Types
 
 /* ═══════════════════════ MAIN COMPONENT ═══════════════════════ */
-export default function AboutSection({ about }: AboutSectionProps) {
+export default function AboutSection({ about, contacto }: AboutSectionProps) {
 
   if (!about) return null;
 
@@ -37,10 +39,19 @@ export default function AboutSection({ about }: AboutSectionProps) {
 
   const mediaBlocks =
     about.blocks?.filter((b) => b.__component === 'shared.media') || [];
+
+  const contactItems = contacto
+    ? [
+        { key: 'phone', label: 'Phone', value: contacto.telefono, href: contacto.telefono ? `tel:${contacto.telefono}` : null },
+        { key: 'email', label: 'Email', value: contacto.email, href: contacto.email ? `mailto:${contacto.email}` : null },
+        { key: 'instagram', label: 'Instagram', value: contacto.instagram, href: contacto.instagram ? `https://instagram.com/${contacto.instagram.replace('@', '')}` : null },
+        { key: 'location', label: 'Location', value: contacto.ubicacion, href: null },
+      ].filter((item) => item.value)
+    : [];
   //#endregion Content extraction
 
   return (
-    <section className="relative h-auto md:h-screen overflow-auto md:overflow-hidden">
+    <section className="relative h-auto min-h-screen overflow-auto">
 
       {/* ── BACKGROUND (fixed, z-0) ── */}
       <div className="fixed inset-0 z-0 bg-white" />
@@ -48,33 +59,54 @@ export default function AboutSection({ about }: AboutSectionProps) {
       {/* ── 3D LOGO ── */}
       <LogoAbout3D />
 
-      {/* ── FOOTER NAV ── */}
-      <NavFooter />
+      {/* ── BACK BUTTON ── */}
+      <div className="fixed top-4 left-4 z-[9999] md:top-8 md:left-8 pointer-events-auto">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 font-ibm-mono text-[16px] font-normal tracking-[-0.05em] transition-colors hover:opacity-70 cursor-pointer pointer-events-auto"
+          style={{ color: '#ef4444' }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Volver
+        </Link>
+      </div>
 
-      {/* ── 4×4 GRID LAYOUT ── */}
-      <div className="relative z-5 grid grid-cols-1 md:grid-cols-4 grid-rows-[auto_auto_1fr] md:grid-rows-4 gap-2 min-h-screen md:h-screen pointer-events-none text-black p-6 md:p-0">
+      {/* ── LAYOUT ── */}
+      <div className="relative z-5 grid grid-cols-1 md:grid-cols-4 gap-2 min-h-screen pointer-events-none text-black p-6 md:p-0">
 
-        {/* TÍTULO — mobile: top / desktop: row 2, col 3 */}
+        {/* TÍTULO */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="col-start-1 md:col-start-3 row-start-1 md:row-start-2 self-end font-ibm-mono text-[clamp(1.5rem,2.5vw,32px)] italic font-bold leading-tight tracking-[-0.085em] pointer-events-auto pt-16 md:pt-0 bg-accent text-white px-2"
+          className="col-start-1 md:col-start-3 self-end font-ibm-mono text-[clamp(1.5rem,2.5vw,32px)] font-bold leading-tight tracking-[-0.085em] pointer-events-auto pt-16 md:pt-8 text-red-500 px-2"
         >
           {about.title}
         </motion.h1>
 
         {/* RICH TEXT — mobile: below title / desktop: row 3-4, col 3-4 */}
-        <div className="col-start-1 md:col-start-3 col-span-1 md:col-span-2 row-start-2 md:row-start-3 row-span-1 md:row-span-2 self-start flex flex-col gap-4 pr-0 md:pr-[clamp(2rem,4vw,4rem)] pt-4 pointer-events-auto overflow-hidden bg-accent text-white px-2">
+        <div className="col-start-1 md:col-start-3 col-span-1 md:col-span-2 self-start flex flex-col gap-4 pr-8 md:pr-[clamp(10rem,16vw,20rem)] pt-4 pointer-events-auto text-red-500 px-2">
           {richTextBlocks.map((block, index) => (
             <motion.div
               key={block.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-              className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-snug font-normal tracking-[-0.05em]"
+              className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-relaxed font-normal tracking-[-0.05em] flex flex-col gap-4"
             >
-              {block.body}
+              {block.body
+                ?.split(/(?<=\.)\s+/)
+                .reduce<string[][]>((acc, sentence, i) => {
+                  const groupIndex = Math.floor(i / 2);
+                  if (!acc[groupIndex]) acc[groupIndex] = [];
+                  acc[groupIndex].push(sentence);
+                  return acc;
+                }, [])
+                .map((group, i) => (
+                  <p key={i}>{group.join(' ')}</p>
+                ))}
             </motion.div>
           ))}
 
@@ -85,10 +117,10 @@ export default function AboutSection({ about }: AboutSectionProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
-              className="border-l-2 border-black/20 pl-6 italic font-ibm-mono text-[clamp(0.8rem,1.1vw,1.3rem)] leading-snug font-bold-italic tracking-[-0.05em]"
+              className="border-l-2 border-black/20 pl-6 font-ibm-mono text-[clamp(0.8rem,1.1vw,1.3rem)] leading-snug font-bold tracking-[-0.05em]"
             >
               {block.title && (
-                <p className="font-bold-italic mb-2">{block.title}</p>
+                <p className="font-bold mb-2">{block.title}</p>
               )}
               {block.body && (
                 <p className="text-black/60">{block.body}</p>
@@ -116,6 +148,41 @@ export default function AboutSection({ about }: AboutSectionProps) {
             ) : null,
           )}
         </div>
+
+        {/* CONTACT INFO — below about content */}
+        {contactItems.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="col-start-1 md:col-start-3 col-span-1 md:col-span-2 self-start pt-6 pr-0 md:pr-[clamp(2rem,4vw,4rem)] pointer-events-auto text-red-500 px-2"
+          >
+            <h2 className="font-ibm-mono text-[clamp(1.5rem,2.5vw,32px)] font-bold leading-tight tracking-[-0.085em] mb-4 text-red-500">Contact</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-5">
+              {contactItems.map((item) => (
+                <div key={item.key}>
+                  <div className="font-ibm-mono text-[11px] leading-tight font-medium tracking-[0.08em] uppercase text-red-500/60 mb-1">
+                    {item.label}
+                  </div>
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      target={item.key === 'instagram' ? '_blank' : undefined}
+                      rel={item.key === 'instagram' ? 'noopener noreferrer' : undefined}
+                      className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-snug font-normal text-red-500 no-underline"
+                    >
+                      {item.value}
+                    </a>
+                  ) : (
+                    <div className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-snug font-normal text-red-500">
+                      {item.value}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
       </div>
     </section>

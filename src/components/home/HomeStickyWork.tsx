@@ -82,14 +82,13 @@ export default function HomeStickyWork({ proyectos }: Props) {
             }}
           >
             <HomeNavLink href="/about">About</HomeNavLink>
-            <HomeNavLink href="/contacto">Contact</HomeNavLink>
           </div>
 
           {/* barra roja */}
           <div 
             style={{ 
               height: 10, 
-              background: '#ff0000', 
+              background: 'transparent', 
               width: '100%',
             }} 
           />
@@ -160,12 +159,12 @@ function HomeNavLink({ href, children }: { href: string; children: React.ReactNo
         alignItems: 'center',
         fontFamily: "'IBM Plex Mono', monospace",
         fontSize: 16,
-        fontWeight: 400,
+        fontWeight: 300,
         letterSpacing: '-0.05em',
-        color: '#ffffff',
+        color: '#ff0000',
       }}
     >
-      {/* recuadro rojo */}
+      {/* recuadro activo */}
       <span
         style={{
           position: 'absolute',
@@ -173,7 +172,7 @@ function HomeNavLink({ href, children }: { href: string; children: React.ReactNo
           right: -12,
           top: -8,
           bottom: -8,
-          background: '#ff0000',
+          background: 'transparent',
           pointerEvents: 'none',
         }}
       />

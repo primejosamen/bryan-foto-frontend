@@ -16,7 +16,7 @@ import HomeEditorialGift from './HomeEditorialGift';
 import HomeBottomHero from './HomeBottomHero';
 
 /** Vertical gap between sections (px) */
-const SECTION_GAP = 35;
+const SECTION_GAP = 100;
 
 interface Props {
   data: HomePage;

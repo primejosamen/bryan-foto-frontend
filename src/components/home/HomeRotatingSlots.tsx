@@ -1,10 +1,8 @@
 'use client';
 
-import { createPortal } from 'react-dom';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import type { Project } from '@/models';
 import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 
@@ -300,14 +298,10 @@ function CoverSlot({
   if (!activeProject) return null;
   const hasMultiple = slot.projects.length > 1;
 
-  const [hover, setHover] = useState(false);
-  const [labelClient, setLabelClient] = useState({ x: 0, y: 0 });
-  const [mounted, setMounted] = useState(false);
   const [prevIndex, setPrevIndex] = useState<number | null>(null);
   const [animKey, setAnimKey] = useState(0);
   const prevActiveRef = useRef(safeIndex);
 
-  useEffect(() => setMounted(true), []);
   useEffect(() => injectKeyframes(), []);
 
   /* Detectar cambio de imagen y guardar la anterior */
@@ -322,25 +316,15 @@ function CoverSlot({
     }
   }, [safeIndex]);
 
-  const onMove = (e: React.PointerEvent<HTMLElement>) => {
-    setLabelClient({ x: e.clientX + 12, y: e.clientY + 12 });
-  };
-
   return (
     <Link
       href={`/proyecto/${activeProject.slug}`}
-      className={`relative z-10 block h-full overflow-visible ${
+      className={`relative z-10 block h-full overflow-visible cursor-pointer ${
         fullWidth ? 'min-w-0 flex-1 shrink' : 'w-[472px] shrink-0'
       }`}
-      style={fullWidth ? { width: '100%', minWidth: 0 } : undefined}
-      onPointerEnter={(e) => {
-        setHover(true);
-        setLabelClient({ x: e.clientX + 12, y: e.clientY + 12 });
-      }}
-      onPointerLeave={() => setHover(false)}
-      onPointerMove={onMove}
+      style={fullWidth ? { width: '100%', minWidth: 0, cursor: 'pointer' } : { cursor: 'pointer' }}
     >
-      <div className="absolute inset-0 z-0 overflow-hidden">
+      <div className="absolute inset-0 z-0 overflow-hidden cursor-pointer">
         {/* Imagen saliente — cinematic exit */}
         {prevIndex !== null && (
           <div
@@ -401,20 +385,20 @@ function CoverSlot({
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPrev(); }}
-              className="absolute left-3 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center text-red-500 drop-shadow-lg transition-all hover:text-red-600 hover:scale-110 pointer-events-auto"
+              className="absolute left-4 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center text-white transition-all duration-300 pointer-events-auto"
               aria-label="Anterior"
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNext(); }}
-              className="absolute right-3 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center text-red-500 drop-shadow-lg transition-all hover:text-red-600 hover:scale-110 pointer-events-auto"
+              className="absolute right-4 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center text-white transition-all duration-300 pointer-events-auto"
               aria-label="Siguiente"
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
@@ -423,12 +407,12 @@ function CoverSlot({
 
         {/* Indicadores */}
         {hasMultiple && (
-          <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+          <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1">
             {slot.projects.map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 rounded-[3px] transition-all duration-300 ${
-                  i === safeIndex ? 'w-4 bg-accent' : 'w-1.5 bg-white/50'
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === safeIndex ? 'w-3 bg-white' : 'w-1 bg-white/40'
                 }`}
               />
             ))}
@@ -436,24 +420,6 @@ function CoverSlot({
         )}
       </div>
 
-      {/* Cursor follower — portal para no recortar con section / clip-path */}
-      {mounted &&
-        createPortal(
-          <motion.div
-            className="pointer-events-none fixed z-[9999]"
-            style={{ left: labelClient.x, top: labelClient.y }}
-            animate={{
-              opacity: hover ? 1 : 0,
-              scale: hover ? 1 : 0.96,
-            }}
-            transition={{ duration: 0.12, ease: 'easeOut' }}
-          >
-            <span className="inline-flex items-center bg-accent px-1.5 py-0.5 font-ibm-mono text-[23px] italic font-bold leading-none tracking-[-0.085em] text-white">
-              {activeProject.titulo}
-            </span>
-          </motion.div>,
-          document.body
-        )}
     </Link>
   );
 }

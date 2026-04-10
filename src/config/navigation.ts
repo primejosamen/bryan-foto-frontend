@@ -23,13 +23,13 @@ export const ROUTES = {
 export interface NavLink {
   href: string;
   label: string;
+  external?: boolean;
 }
 
 /** Main site navigation links */
 export const NAV_LINKS: NavLink[] = [
-  { href: ROUTES.home, label: 'Home' },
   { href: ROUTES.about, label: 'About' },
-  { href: ROUTES.contact, label: 'Contact' },
+  { href: 'https://www.instagram.com/bryantorres.a/', label: 'Instagram', external: true },
 ] as const;
 
 /** Header navigation links (includes Work/Home) */

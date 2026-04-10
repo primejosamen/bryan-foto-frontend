@@ -200,10 +200,10 @@ export default function LogoAbout3D() {
         }}
         style={{
           position: 'fixed',
-          top: 0,
+          top: 60,
           left: 0,
           width: '50vw',
-          height: '100vh',
+          height: 'calc(100vh - 60px)',
           zIndex: 10,
           pointerEvents: 'auto',
           cursor: isDragging ? 'grabbing' : 'grab',

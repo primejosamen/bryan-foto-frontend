@@ -138,10 +138,10 @@ export default function ProyectoDetailView({ proyecto }: Props) {
   return (
     <div className="relative bg-white min-h-screen">
       {/* Back link */}
-      <div className="fixed top-4 left-4 z-40 md:top-8 md:left-8">
+      <div className="fixed top-4 left-4 z-[9999] md:top-8 md:left-8 pointer-events-auto">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 font-ibm-mono text-[16px] font-normal tracking-[-0.05em] text-red-500! transition-colors hover:text-red-700!"
+          className="inline-flex items-center gap-2 font-ibm-mono text-[16px] font-normal tracking-[-0.05em] text-red-500! transition-colors hover:text-red-700! cursor-pointer pointer-events-auto"
         >
           <svg
             width="18"
@@ -160,24 +160,20 @@ export default function ProyectoDetailView({ proyecto }: Props) {
       {/* Session info bar */}
       <div className="fixed z-10 left-0 right-0 top-1/2 -translate-y-1/2 flex flex-col items-end pointer-events-none px-4 md:items-stretch md:px-10 md:grid md:grid-cols-[1fr_2fr_1fr] md:gap-10">
         <div className="flex items-center self-start md:self-auto">
-          <h1 className="font-ibm-mono text-[clamp(2rem,4.5vw,64px)] font-bold italic leading-tight text-red-500 tracking-[-0.085em]">
+          <h1 className="font-ibm-mono text-[clamp(2rem,4.5vw,64px)] font-bold leading-tight text-red-500 tracking-[-0.085em]">
             {proyecto.titulo}
           </h1>
         </div>
 
         <div className="flex items-center">
           {proyecto.descripcion && (
-            <p className="font-ibm-mono text-[clamp(0.75rem,1.2vw,16px)] font-bold italic text-red-500 tracking-[-0.05em]">
+            <p className="font-ibm-mono text-[clamp(0.75rem,1.2vw,16px)] font-bold text-red-500 tracking-[-0.05em]">
               {proyecto.descripcion}
             </p>
           )}
         </div>
 
-        <div className="md:flex items-center">
-          <span className="font-ibm-mono font-bold text-[clamp(0.625rem,0.8vw,11px)] uppercase tracking-[0.12em] text-red-500">
-            {todasLasFotos.length} fotos
-          </span>
-        </div>
+
       </div>
 
       {/* Images + Thumbnails grid */}
@@ -260,8 +256,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
         </div>
       </div>
 
-      {/* Progress bar */}
-      <ProgressBar total={todasLasFotos.length} activeIndex={activeIndex} />
+
 
       {/* Lightbox dialog */}
       <AnimatePresence>
@@ -321,30 +316,3 @@ export default function ProyectoDetailView({ proyecto }: Props) {
   );
 }
 
-/* ───────── Subtle progress bar ────────── */
-function ProgressBar({
-  total,
-  activeIndex,
-}: {
-  total: number;
-  activeIndex: number;
-}) {
-  const pct = total > 1 ? ((activeIndex + 1) / total) * 100 : 100;
-
-  return (
-    <div className="fixed bottom-4 right-4 md:top-[40%] md:bottom-auto md:right-8 z-40 flex items-center gap-3 font-ibm-mono">
-      <span className="text-red-500 text-[11px] tracking-widest">
-        {String(activeIndex + 1).padStart(2, '0')}/
-        {String(total).padStart(2, '0')}
-      </span>
-
-      <div className="relative h-0.5 w-15 overflow-hidden bg-transparent">
-        <motion.div
-          className="absolute inset-y-0 left-0 bg-red-500"
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.35, ease: 'easeOut' }}
-        />
-      </div>
-    </div>
-  );
-}

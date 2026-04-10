@@ -69,7 +69,7 @@ export default function ContactSection({ contacto }: ContactSectionProps) {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="col-start-1 md:col-start-3 row-start-1 md:row-start-2 self-end font-ibm-mono text-[clamp(1.5rem,2.5vw,32px)] italic font-bold leading-tight tracking-[-0.085em] pointer-events-auto pt-16 md:pt-0 bg-accent text-white px-2"
+          className="col-start-1 md:col-start-3 row-start-1 md:row-start-2 self-end font-ibm-mono text-[clamp(1.5rem,2.5vw,32px)] font-bold leading-tight tracking-[-0.085em] pointer-events-auto pt-16 md:pt-0 bg-accent text-white px-2"
         >
           Contact
         </motion.h1>

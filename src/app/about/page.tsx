@@ -4,13 +4,16 @@
  * @module app/about
  */
 import AboutSection from '@/components/about/AboutSection';
-import { getAbout } from '@/lib/api';
+import { getAbout, getContact } from '@/lib/api';
 //import { REVALIDATE_INTERVAL } from '@/config/constants';
 
 export default async function AboutPage() {
-  const about = await getAbout();
+  const [about, contacto] = await Promise.all([
+    getAbout(),
+    getContact(),
+  ]);
 
-  return <AboutSection about={about} />;
+  return <AboutSection about={about} contacto={contacto} />;
 }
 
 export const metadata = {
