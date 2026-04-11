@@ -34,13 +34,14 @@ export default function HomeHeroGrid({ image1, image2, image3 }: Props) {
       {images.map((img, i) => (
         <ScrollReveal key={i} delay={i * 150}>
           <div
-            className="relative w-full overflow-hidden md:w-[472px]"
+            className="group relative w-full overflow-hidden md:w-[472px]"
             style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
           >
             <Image
               src={getStrapiImageUrl(img)}
               alt={`Hero ${i + 1}`}
               fill
+              className="transition-transform duration-500 ease-out group-hover:scale-110"
               style={{ objectFit: 'cover' }}
               sizes="(max-width: 768px) 100vw, 472px"
               quality={100}

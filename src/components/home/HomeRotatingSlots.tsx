@@ -324,7 +324,7 @@ function CoverSlot({
       }`}
       style={fullWidth ? { width: '100%', minWidth: 0, cursor: 'pointer' } : { cursor: 'pointer' }}
     >
-      <div className="absolute inset-0 z-0 overflow-hidden cursor-pointer">
+      <div className="group/cover absolute inset-0 z-0 overflow-hidden cursor-pointer">
         {/* Imagen saliente — cinematic exit */}
         {prevIndex !== null && (
           <div
@@ -339,7 +339,7 @@ function CoverSlot({
               src={getStrapiImageUrl(slot.projects[prevIndex].foto_portada)}
               alt={slot.projects[prevIndex].titulo}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-500 ease-out group-hover/cover:scale-110"
               sizes={fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`}
               quality={100}
             />
@@ -362,7 +362,7 @@ function CoverSlot({
             src={getStrapiImageUrl(activeProject.foto_portada)}
             alt={activeProject.titulo}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-500 ease-out group-hover/cover:scale-110"
             sizes={fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`}
             quality={100}
             priority={slotIndex < 3 || fullWidth}

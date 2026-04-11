@@ -30,13 +30,14 @@ export default function HomeCenteredImage({ image }: Props) {
     >
       <ScrollReveal>
         <div
-          className="relative w-full overflow-hidden md:w-[472px] md:ml-[482px]"
+          className="group relative w-full overflow-hidden md:w-[472px] md:ml-[482px]"
           style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
         >
           <Image
             src={getStrapiImageUrl(image)}
             alt="Centered feature"
             fill
+            className="transition-transform duration-500 ease-out group-hover:scale-110"
             style={{ objectFit: 'cover' }}
             sizes="(max-width: 768px) 100vw, 472px"
             quality={100}

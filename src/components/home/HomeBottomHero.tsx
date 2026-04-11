@@ -26,7 +26,7 @@ export default function HomeBottomHero({ image }: Props) {
     >
       <ScrollReveal>
         <div
-          className="relative w-full overflow-hidden"
+          className="group relative w-full overflow-hidden"
           style={{ aspectRatio: `${TOTAL_W} / ${IMG_H}` }}
         >
           <ImageCarousel

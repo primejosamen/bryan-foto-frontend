@@ -32,13 +32,14 @@ export default function HomeAboutPreview({ image, text }: Props) {
       {/* Col 1: Imagen */}
       <ScrollReveal delay={0}>
         <div
-          className="relative w-full overflow-hidden md:w-[472px] md:shrink-0"
+          className="group relative w-full overflow-hidden md:w-[472px] md:shrink-0"
           style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
         >
           <Image
             src={getStrapiImageUrl(image)}
             alt="About preview"
             fill
+            className="transition-transform duration-500 ease-out group-hover:scale-110"
             style={{ objectFit: 'cover' }}
             sizes="(max-width: 768px) 100vw, 472px"
             quality={100}

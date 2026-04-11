@@ -30,7 +30,7 @@ export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {
     >
       <ScrollReveal delay={0}>
         <div
-          className="relative w-full overflow-hidden md:w-[713px]"
+          className="group relative w-full overflow-hidden md:w-[713px]"
           style={{ aspectRatio: `${HALF_W} / ${IMG_H}` }}
         >
           <ImageCarousel
@@ -43,7 +43,7 @@ export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {
 
       <ScrollReveal delay={200}>
         <div
-          className="relative w-full overflow-hidden md:w-[713px]"
+          className="group relative w-full overflow-hidden md:w-[713px]"
           style={{ aspectRatio: `${HALF_W} / ${IMG_H}` }}
         >
           <ImageCarousel

@@ -27,12 +27,12 @@ export default function HomeWorkCard({
           position: 'relative',
         }}
       >
-        <div className="relative w-full h-full overflow-hidden">
+        <div className="group/img relative w-full h-full overflow-hidden">
           <Image
             src={getStrapiImageUrl(proyecto.foto_portada)}
             alt={proyecto.titulo}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-500 ease-out group-hover/img:scale-110"
             sizes="472px"
             priority={priority}
           />

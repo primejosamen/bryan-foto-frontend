@@ -71,6 +71,7 @@ export default function ImageCarousel({
             src={getStrapiImageUrl(images[idx])}
             alt={`${alt} — ${idx + 1}`}
             fill
+            className="transition-transform duration-500 ease-out group-hover:scale-110"
             style={{ objectFit: 'cover' }}
             sizes={sizes}
             quality={quality}
