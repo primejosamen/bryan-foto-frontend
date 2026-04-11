@@ -212,9 +212,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                 return (
                   <div
                     key={foto.id}
-                    className={`relative overflow-hidden ${
-                      isActive ? 'w-[600px] h-[380px]' : 'w-[600px] h-[82px]'
-                    }`}
+                    className="relative overflow-hidden w-[130px] h-[82px]"
                   >
                     <motion.button
                       type="button"
@@ -226,15 +224,13 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                       }}
                       whileHover={{
                         opacity: 0.9,
-                        scale: isActive ? 1.01 : 1.02,
+                        scale: 1.02,
                       }}
                       transition={{
                         duration: 0.28,
                         ease: [0.22, 1, 0.36, 1],
                       }}
-                      className={`absolute top-0 right-0 block overflow-hidden will-change-transform [transform:translateZ(0)] [backface-visibility:hidden] ${
-                        isActive ? 'w-[600px] h-[380px]' : 'w-[130px] h-[82px]'
-                      }`}
+                      className="absolute top-0 right-0 block overflow-hidden will-change-transform [transform:translateZ(0)] [backface-visibility:hidden] w-[130px] h-[82px]"
                     >
                       <div className="relative w-full h-full">
                         <Image
@@ -242,8 +238,8 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                           alt={`Miniatura ${i + 1}`}
                           fill
                           className="object-cover"
-                          sizes={isActive ? '600px' : '130px'}
-                          quality={isActive ? 82 : 68}
+                          sizes="130px"
+                          quality={68}
                           loading={i < 2 ? 'eager' : 'lazy'}
                         />
                       </div>
