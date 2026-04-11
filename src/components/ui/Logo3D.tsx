@@ -13,6 +13,10 @@ import {
   type SceneInputState,
 } from '@/lib/hooks/useSceneInteraction';
 
+/* ── Constantes de altura del header ── */
+const HEADER_H_DESKTOP = 170;
+const HEADER_H_MOBILE  = 120;
+
 /* ─────────────────────────────────────────────
    LogoScene — SOLO el logo GRANDE para el HOME
    ───────────────────────────────────────────── */
@@ -20,6 +24,14 @@ function LogoScene({ input }: { input: SceneInputState }) {
   const groupRef = useRef<THREE.Group>(null);
   const matsRef = useRef<THREE.ShaderMaterial[]>([]);
   const logoCenterRef = useRef(new THREE.Vector3());
+
+  /* ── Intro animation: slow cinematic sweep + gentle spin ── */
+  const INTRO_DELAY    = 0.5;          // wait for scene to settle
+  const SWEEP_DURATION = 3.0;          // phase 1: -45° → 0°
+  const SPIN_DURATION  = 3.0;          // phase 2: slow 180° rotation
+  const introStartRef  = useRef(-1);   // -1 = not started yet
+  const introDoneRef   = useRef(false);
+  const frameCountRef  = useRef(0);    // skip first frames (GPU init)
 
   const { camera, gl, scene, size } = useThree();
 
@@ -172,8 +184,45 @@ function LogoScene({ input }: { input: SceneInputState }) {
       const targetY = c.y + input.y * parallaxStrength.y;
       persp.position.x += (targetX - persp.position.x) * cameraLerp;
       persp.position.y += (targetY - persp.position.y) * cameraLerp;
-      persp.position.z = cameraBasePos.z;
+
+      // Hover zoom: dolly camera closer smoothly
+      const targetZ = input.isHovered ? cameraBasePos.z - 0.8 : cameraBasePos.z;
+      persp.position.z += (targetZ - persp.position.z) * 0.06;
+
       persp.lookAt(c);
+    }
+
+    // ── Intro: sweep from -45° to 0°, then gentle 180° spin ──
+    const INTRO_START_ANGLE = -Math.PI / 4;   // -45°
+    const TOTAL_DURATION = INTRO_DELAY + SWEEP_DURATION + SPIN_DURATION;
+    let introRotY = 0;
+    if (!introDoneRef.current) {
+      frameCountRef.current++;
+      // Wait for a few frames so the GPU finishes compiling shaders
+      if (frameCountRef.current < 3) {
+        introRotY = INTRO_START_ANGLE;
+      } else {
+        const now = performance.now() / 1000;
+        if (introStartRef.current < 0) introStartRef.current = now;
+        const elapsed = now - introStartRef.current;
+
+        if (elapsed < INTRO_DELAY) {
+          // Hold at start angle during delay
+          introRotY = INTRO_START_ANGLE;
+        } else if (elapsed < INTRO_DELAY + SWEEP_DURATION) {
+          // Phase 1: sweep -45° → 0° (quintic ease-out)
+          const t = (elapsed - INTRO_DELAY) / SWEEP_DURATION;
+          const ease = 1 - Math.pow(1 - t, 5);
+          introRotY = INTRO_START_ANGLE * (1 - ease);
+        } else if (elapsed < TOTAL_DURATION) {
+          // Phase 2: gentle 180° spin (ease-in-out sinusoidal)
+          const t = (elapsed - INTRO_DELAY - SWEEP_DURATION) / SPIN_DURATION;
+          const ease = 0.5 - 0.5 * Math.cos(Math.PI * t);
+          introRotY = ease * Math.PI * 2; // 0° → 360°
+        } else {
+          introDoneRef.current = true;
+        }
+      }
     }
 
     // Rotar alrededor del centro del logo (translate → rotate → translate back)
@@ -184,10 +233,31 @@ function LogoScene({ input }: { input: SceneInputState }) {
 
       // Translate to center, rotate, translate back
       groupRef.current.position.set(-c.x, -c.y, -c.z);
-      groupRef.current.rotation.set(input.rotationX, input.rotationY, 0);
+      groupRef.current.rotation.set(
+        input.rotationX,
+        input.rotationY + introRotY,
+        0,
+      );
       groupRef.current.position.applyEuler(groupRef.current.rotation);
       groupRef.current.position.add(c);
     }
+
+    // ── Off-center projection: logo aparece en la franja del header ──
+    const halfH = Math.tan(THREE.MathUtils.degToRad(FOV / 2)) * persp.near;
+    const halfW = halfH * persp.aspect;
+    const headerCenter = isMobile ? HEADER_H_MOBILE / 2 : HEADER_H_DESKTOP / 2;
+    const shiftFraction = (size.height / 2 - headerCenter) / size.height;
+    const shift = shiftFraction * 2 * halfH;
+
+    persp.projectionMatrix.makePerspective(
+      -halfW,
+      halfW,
+      halfH - shift,
+      -halfH - shift,
+      persp.near,
+      persp.far,
+    );
+    persp.projectionMatrixInverse.copy(persp.projectionMatrix).invert();
 
     for (const mat of matsRef.current) {
       (mat.uniforms.uCameraPos.value as THREE.Vector3).copy(persp.position);
@@ -208,24 +278,10 @@ export default function Logo3D() {
   const { isDragging, startOrbit, requestOrientationPermission } =
     useSceneInteraction(input);
 
-  /* Centrar el logo en la franja del header (170px desktop / 120px móvil).
-     El logo queda centrado verticalmente en el canvas (100vh), así que
-     desplazamos el canvas para que ese centro caiga en la mitad del header. */
-  const HEADER_H_DESKTOP = 170;
-  const HEADER_H_MOBILE  = 120;
   const [isMobileLayout, setIsMobileLayout] = useState(false);
-  const [canvasTopOffset, setCanvasTopOffset] = useState(-400);
   useLayoutEffect(() => {
-    const getOffset = (narrow: boolean) => {
-      const hc = narrow ? HEADER_H_MOBILE / 2 : HEADER_H_DESKTOP / 2;
-      return -(window.innerHeight / 2) + hc;
-    };
     const mq = window.matchMedia('(max-width: 767px)');
-    const apply = () => {
-      const narrow = mq.matches;
-      setIsMobileLayout(narrow);
-      setCanvasTopOffset(getOffset(narrow));
-    };
+    const apply = () => setIsMobileLayout(mq.matches);
     apply();
     window.addEventListener('resize', apply);
     mq.addEventListener('change', apply);
@@ -237,11 +293,11 @@ export default function Logo3D() {
 
   return (
     <>
-      {/* Canvas fullscreen */}
+      {/* Canvas fullscreen — cubre todo el viewport para evitar recorte */}
       <div
         style={{
           position: 'fixed',
-          top: canvasTopOffset,
+          top: 0,
           left: 0,
           width: '100vw',
           height: '100vh',
@@ -264,9 +320,11 @@ export default function Logo3D() {
         </Canvas>
       </div>
 
-      {/* Zona interactiva del header — drag/orbit + touch */}
+      {/* Zona interactiva del header — drag/orbit + hover zoom + touch */}
       <div
         onMouseDown={(e) => startOrbit(e.clientX, e.clientY)}
+        onMouseEnter={() => { input.isHovered = true; }}
+        onMouseLeave={() => { input.isHovered = false; }}
         onTouchStart={(e) => {
           requestOrientationPermission();
           if (e.touches[0])

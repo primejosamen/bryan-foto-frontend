@@ -14,6 +14,8 @@ export interface SceneInputState {
   /** Last pointer position (for delta calculation) */
   lastX: number;
   lastY: number;
+  /** Hover state for zoom effect */
+  isHovered: boolean;
 }
 
 export function createInputState(): SceneInputState {
@@ -25,6 +27,7 @@ export function createInputState(): SceneInputState {
     rotationX: 0,
     lastX: 0,
     lastY: 0,
+    isHovered: false,
   };
 }
 
