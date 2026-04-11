@@ -18,14 +18,14 @@ const NAV_BOTTOM = 65;
 const NAV_GAP = 10;
 
 /* Timing base */
-const ROTATION_INTERVAL = 1570;  // pausa entre rondas
-const STAGGER_DELAY = 500;       // pausa entre slots dentro de una ronda
+const ROTATION_INTERVAL = 3000;  // pausa entre rondas
+const STAGGER_DELAY = 800;       // pausa entre slots dentro de una ronda
 
 /* Duración de transición */
-const TRANSITION_MS = 600;       // duración de la animación CSS
+const TRANSITION_MS = 1200;      // duración de la animación CSS
 
 /* Hold visual (mini pausa perceptual antes del cambio) */
-const HOLD_MS = 120;             // anticipación muy breve
+const HOLD_MS = 60;              // anticipación muy breve
 
 /* ═══════════════════════ KEYFRAMES CSS ═══════════════════════ */
 const STYLE_ID = 'slot-cinematic-keyframes';
@@ -40,25 +40,9 @@ function injectKeyframes() {
     @keyframes slot-enter {
       0% {
         opacity: 0;
-        transform: translateX(24px) scale(1.05);
-        filter: blur(12px);
       }
       100% {
         opacity: 1;
-        transform: translateX(0) scale(1);
-        filter: blur(0);
-      }
-    }
-    @keyframes slot-exit {
-      0% {
-        opacity: 1;
-        transform: translateX(0) scale(1);
-        filter: blur(0);
-      }
-      100% {
-        opacity: 0;
-        transform: translateX(-18px) scale(1.02);
-        filter: blur(6px);
       }
     }
   `;
@@ -325,15 +309,12 @@ function CoverSlot({
       style={fullWidth ? { width: '100%', minWidth: 0, cursor: 'pointer' } : { cursor: 'pointer' }}
     >
       <div className="group/cover absolute inset-0 z-0 overflow-hidden cursor-pointer">
-        {/* Imagen saliente — cinematic exit */}
+        {/* Imagen anterior — se queda estática debajo */}
         {prevIndex !== null && (
           <div
-            key={`exit-${animKey}`}
+            key={`bg-${animKey}`}
             className="absolute inset-0"
-            style={{
-              animation: `slot-exit ${TRANSITION_MS}ms cubic-bezier(0.4, 0, 0.2, 1) forwards`,
-              zIndex: 1,
-            }}
+            style={{ zIndex: 1 }}
           >
             <Image
               src={getStrapiImageUrl(slot.projects[prevIndex].foto_portada)}
@@ -346,14 +327,14 @@ function CoverSlot({
           </div>
         )}
 
-        {/* Imagen entrante — cinematic enter */}
+        {/* Imagen nueva — fade-in suave encima */}
         <div
           key={`enter-${animKey}`}
           className="absolute inset-0"
           style={{
             animation:
               animKey > 0
-                ? `slot-enter ${TRANSITION_MS}ms cubic-bezier(0.4, 0, 0.2, 1) forwards`
+                ? `slot-enter ${TRANSITION_MS}ms ease-out forwards`
                 : undefined,
             zIndex: 2,
           }}

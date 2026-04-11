@@ -20,10 +20,12 @@ const HEADER_H_MOBILE  = 120;
 /* ─────────────────────────────────────────────
    LogoScene — SOLO el logo GRANDE para el HOME
    ───────────────────────────────────────────── */
-function LogoScene({ input }: { input: SceneInputState }) {
+function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollProgress: React.RefObject<number> }) {
   const groupRef = useRef<THREE.Group>(null);
   const matsRef = useRef<THREE.ShaderMaterial[]>([]);
   const logoCenterRef = useRef(new THREE.Vector3());
+  const baseScaleRef = useRef(1);
+  const currentScaleRef = useRef(1);
 
   /* ── Intro animation: slow cinematic sweep + gentle spin ── */
   const INTRO_DELAY    = 0.5;          // wait for scene to settle
@@ -147,6 +149,8 @@ function LogoScene({ input }: { input: SceneInputState }) {
 
     logo.position.set(-rawCenter.x * s, -rawCenter.y * s, logoZ);
     logo.scale.set(s, s, s);
+    baseScaleRef.current = s;
+    currentScaleRef.current = s;
 
     if (groupRef.current) {
       while (groupRef.current.children.length > 0) {
@@ -242,6 +246,19 @@ function LogoScene({ input }: { input: SceneInputState }) {
       groupRef.current.position.add(c);
     }
 
+    // ── Scroll-based scale + shift on desktop ──
+    const sp = (!isMobile ? (scrollProgress.current ?? 0) : 0);
+
+    // Scale down: 100% → 35% of original size
+    if (sp > 0 && logo) {
+      const targetScale = baseScaleRef.current * (1 - sp * 0.65);
+      currentScaleRef.current += (targetScale - currentScaleRef.current) * 0.12;
+      logo.scale.setScalar(currentScaleRef.current);
+    } else if (logo) {
+      currentScaleRef.current += (baseScaleRef.current - currentScaleRef.current) * 0.12;
+      logo.scale.setScalar(currentScaleRef.current);
+    }
+
     // ── Off-center projection: logo aparece en la franja del header ──
     const halfH = Math.tan(THREE.MathUtils.degToRad(FOV / 2)) * persp.near;
     const halfW = halfH * persp.aspect;
@@ -249,9 +266,12 @@ function LogoScene({ input }: { input: SceneInputState }) {
     const shiftFraction = (size.height / 2 - headerCenter) / size.height;
     const shift = shiftFraction * 2 * halfH;
 
+    // ── Horizontal shift: move logo to the right on desktop when scrolled ──
+    const hShift = sp * halfW * -0.40;
+
     persp.projectionMatrix.makePerspective(
-      -halfW,
-      halfW,
+      -halfW + hShift,
+      halfW + hShift,
       halfH - shift,
       -halfH - shift,
       persp.near,
@@ -275,6 +295,8 @@ export default function Logo3D() {
   if (!inputRef.current) inputRef.current = createInputState();
   const input = inputRef.current;
 
+  const scrollProgressRef = useRef(0);
+
   const { isDragging, startOrbit, requestOrientationPermission } =
     useSceneInteraction(input);
 
@@ -288,6 +310,26 @@ export default function Logo3D() {
     return () => {
       window.removeEventListener('resize', apply);
       mq.removeEventListener('change', apply);
+    };
+  }, []);
+
+  /* ── Scroll tracking: 0 = top, 1 = scrolled past threshold ── */
+  useEffect(() => {
+    const SCROLL_THRESHOLD = 150; // px to fully transition
+    let raf: number;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const raw = Math.min(window.scrollY / SCROLL_THRESHOLD, 1);
+        // Smooth ease-out curve
+        scrollProgressRef.current = 1 - Math.pow(1 - raw, 3);
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
     };
   }, []);
 
@@ -316,7 +358,7 @@ export default function Logo3D() {
           }}
           dpr={[1, 2]}
         >
-          <LogoScene input={input} />
+          <LogoScene input={input} scrollProgress={scrollProgressRef} />
         </Canvas>
       </div>
 

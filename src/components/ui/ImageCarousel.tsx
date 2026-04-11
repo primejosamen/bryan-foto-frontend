@@ -86,7 +86,7 @@ export default function ImageCarousel({
             type="button"
             onClick={prev}
             aria-label="Imagen anterior"
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 text-red-500 transition-colors hover:text-red-700 cursor-pointer"
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 text-white transition-all duration-300 cursor-pointer"
           >
             <svg
               width="18"
@@ -107,7 +107,7 @@ export default function ImageCarousel({
             type="button"
             onClick={next}
             aria-label="Siguiente imagen"
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 text-red-500 transition-colors hover:text-red-700 cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 text-white transition-all duration-300 cursor-pointer"
           >
             <svg
               width="18"

@@ -127,6 +127,31 @@ export default function ProyectoDetailView({ proyecto }: Props) {
     });
   }, [activeIndex, todasLasFotos]);
 
+  /* ── Lightbox navigation ── */
+  const goLightbox = useCallback(
+    (dir: -1 | 1) => {
+      setLightboxIndex((prev) => {
+        if (prev === null) return null;
+        const next = prev + dir;
+        if (next < 0 || next >= todasLasFotos.length) return prev;
+        return next;
+      });
+    },
+    [todasLasFotos.length],
+  );
+
+  /* ── Keyboard nav for lightbox ── */
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') goLightbox(1);
+      else if (e.key === 'ArrowLeft') goLightbox(-1);
+      else if (e.key === 'Escape') setLightboxIndex(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightboxIndex, goLightbox]);
+
   /* ── Click thumbnail → scroll to section ── */
   const scrollTo = useCallback((i: number) => {
     sectionRefs.current[i]?.scrollIntoView({
@@ -153,7 +178,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          Volver
+          Back
         </Link>
       </div>
 
@@ -289,6 +314,50 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                 quality={95}
               />
             </motion.div>
+
+            {/* Prev arrow */}
+            {lightboxIndex > 0 && (
+              <button
+                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 p-3 text-black/40 hover:text-black transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goLightbox(-1);
+                }}
+              >
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+            )}
+
+            {/* Next arrow */}
+            {lightboxIndex < todasLasFotos.length - 1 && (
+              <button
+                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 p-3 text-black/40 hover:text-black transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goLightbox(1);
+                }}
+              >
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            )}
 
             <button
               className="absolute top-8 right-8 z-20 text-black/50 hover:text-black transition-colors"
