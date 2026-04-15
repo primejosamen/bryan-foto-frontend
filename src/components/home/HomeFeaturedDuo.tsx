@@ -8,7 +8,7 @@
  * @module components/home/HomeFeaturedDuo
  */
 
-import type { StrapiImage } from '@/models';
+import type { StrapiMedia } from '@/models';
 import ScrollReveal from './ScrollReveal';
 import ImageCarousel from '@/components/ui/ImageCarousel';
 
@@ -18,8 +18,8 @@ const HALF_W = (TOTAL_W - GAP) / 2; // 713
 const IMG_H = 860;
 
 interface Props {
-  imageLeft: StrapiImage | StrapiImage[];
-  imageRight: StrapiImage | StrapiImage[];
+  imageLeft: StrapiMedia | StrapiMedia[];
+  imageRight: StrapiMedia | StrapiMedia[];
 }
 
 export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {

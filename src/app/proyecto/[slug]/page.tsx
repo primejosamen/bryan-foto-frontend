@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: ProyectoPageProps) {
   }
 
   return {
-    title: `${proyecto.titulo} | Bryan Photography`,
+    title: `${proyecto.titulo} | Bryan Torres`,
     description: proyecto.descripcion || `Project de fotografía: ${proyecto.titulo}`,
   };
 }

@@ -5,8 +5,6 @@
  * @module models/home-page
  */
 
-import type { StrapiImage } from './project.model';
-
 /** Strapi media asset that can be image, gif, or video */
 export interface StrapiMedia {
   id: number;
@@ -44,26 +42,26 @@ export interface HomePage {
   id: number;
   documentId: string;
 
-  /* Section 1: Hero Grid — 3 individual images */
-  hero_image_1: StrapiImage;
-  hero_image_2: StrapiImage;
-  hero_image_3: StrapiImage;
+  /* Section 1: Hero Grid — 3 individual media */
+  hero_image_1: StrapiMedia;
+  hero_image_2: StrapiMedia;
+  hero_image_3: StrapiMedia;
 
-  /* Section 2: Featured Duo — 2 large images (or arrays for carousel) */
-  featured_image_left: StrapiImage | StrapiImage[];
-  featured_image_right: StrapiImage | StrapiImage[];
+  /* Section 2: Featured Duo — 2 large media (or arrays for carousel) */
+  featured_image_left: StrapiMedia | StrapiMedia[];
+  featured_image_right: StrapiMedia | StrapiMedia[];
 
-  /* Section 3: About Preview — image + text */
-  about_image: StrapiImage;
+  /* Section 3: About Preview — media + text */
+  about_image: StrapiMedia;
   about_text: StrapiBlock[];
 
-  /* Section 4: Centered Image */
-  centered_image: StrapiImage;
+  /* Section 4: Centered media */
+  centered_image: StrapiMedia;
 
   /* Section 5: Editorial + Gif/Video */
   editorial_text: StrapiBlock[];
   gift_media: StrapiMedia;
 
   /* Section 6: Bottom Hero (single or array for carousel) */
-  bottom_hero_image: StrapiImage | StrapiImage[];
+  bottom_hero_image: StrapiMedia | StrapiMedia[];
 }

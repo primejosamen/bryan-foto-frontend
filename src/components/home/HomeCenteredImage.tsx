@@ -7,9 +7,8 @@
  * @module components/home/HomeCenteredImage
  */
 
-import Image from 'next/image';
-import type { StrapiImage } from '@/models';
-import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import type { StrapiMedia } from '@/models';
+import StrapiMediaRenderer from '@/components/ui/StrapiMediaRenderer';
 import ScrollReveal from './ScrollReveal';
 
 const SLOT_W = 472;
@@ -19,7 +18,7 @@ const LEFT_OFFSET = SLOT_W + SLOT_GAP; // 482px — start of col2
 const IMG_H = 480;
 
 interface Props {
-  image: StrapiImage;
+  image: StrapiMedia;
 }
 
 export default function HomeCenteredImage({ image }: Props) {
@@ -33,14 +32,11 @@ export default function HomeCenteredImage({ image }: Props) {
           className="group relative w-full overflow-hidden md:w-[472px] md:ml-[482px]"
           style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
         >
-          <Image
-            src={getStrapiImageUrl(image)}
+          <StrapiMediaRenderer
+            media={image}
             alt="Centered feature"
-            fill
-            className="transition-transform duration-500 ease-out group-hover:scale-110"
-            style={{ objectFit: 'cover' }}
+            className=""
             sizes="(max-width: 768px) 100vw, 472px"
-            quality={100}
           />
         </div>
       </ScrollReveal>

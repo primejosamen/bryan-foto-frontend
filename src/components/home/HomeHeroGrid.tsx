@@ -7,9 +7,8 @@
  * @module components/home/HomeHeroGrid
  */
 
-import Image from 'next/image';
-import type { StrapiImage } from '@/models';
-import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import type { StrapiMedia } from '@/models';
+import StrapiMediaRenderer from '@/components/ui/StrapiMediaRenderer';
 import ScrollReveal from './ScrollReveal';
 
 const SLOT_W = 472;
@@ -18,9 +17,9 @@ const IMG_H = 320;
 const TOTAL_W = SLOT_W * 3 + GAP * 2; // 1436
 
 interface Props {
-  image1: StrapiImage;
-  image2: StrapiImage;
-  image3: StrapiImage;
+  image1: StrapiMedia;
+  image2: StrapiMedia;
+  image3: StrapiMedia;
 }
 
 export default function HomeHeroGrid({ image1, image2, image3 }: Props) {
@@ -37,14 +36,11 @@ export default function HomeHeroGrid({ image1, image2, image3 }: Props) {
             className="group relative w-full overflow-hidden md:w-[472px]"
             style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
           >
-            <Image
-              src={getStrapiImageUrl(img)}
+            <StrapiMediaRenderer
+              media={img}
               alt={`Hero ${i + 1}`}
-              fill
-              className="transition-transform duration-500 ease-out group-hover:scale-110"
-              style={{ objectFit: 'cover' }}
+              className=""
               sizes="(max-width: 768px) 100vw, 472px"
-              quality={100}
             />
           </div>
         </ScrollReveal>

@@ -7,7 +7,7 @@
  * @module components/home/HomeBottomHero
  */
 
-import type { StrapiImage } from '@/models';
+import type { StrapiMedia } from '@/models';
 import ScrollReveal from './ScrollReveal';
 import ImageCarousel from '@/components/ui/ImageCarousel';
 
@@ -15,7 +15,7 @@ const TOTAL_W = 1436;
 const IMG_H = 900;
 
 interface Props {
-  image: StrapiImage | StrapiImage[];
+  image: StrapiMedia | StrapiMedia[];
 }
 
 export default function HomeBottomHero({ image }: Props) {
