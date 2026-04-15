@@ -7,9 +7,8 @@
  * @module components/home/HomeAboutPreview
  */
 
-import Image from 'next/image';
-import type { StrapiImage, StrapiBlock } from '@/models';
-import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import type { StrapiMedia, StrapiBlock } from '@/models';
+import StrapiMediaRenderer from '@/components/ui/StrapiMediaRenderer';
 import { renderBlocks } from '@/lib/helpers/rich-text.helpers';
 import ScrollReveal from './ScrollReveal';
 
@@ -19,7 +18,7 @@ const TOTAL_W = SLOT_W * 3 + SLOT_GAP * 2; // 1436
 const IMG_H = 620;
 
 interface Props {
-  image: StrapiImage;
+  image: StrapiMedia;
   text: StrapiBlock[];
 }
 
@@ -35,14 +34,11 @@ export default function HomeAboutPreview({ image, text }: Props) {
           className="group relative w-full overflow-hidden md:w-[472px] md:shrink-0"
           style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
         >
-          <Image
-            src={getStrapiImageUrl(image)}
+          <StrapiMediaRenderer
+            media={image}
             alt="About preview"
-            fill
-            className="transition-transform duration-500 ease-out group-hover:scale-110"
-            style={{ objectFit: 'cover' }}
+            className=""
             sizes="(max-width: 768px) 100vw, 472px"
-            quality={100}
           />
         </div>
       </ScrollReveal>

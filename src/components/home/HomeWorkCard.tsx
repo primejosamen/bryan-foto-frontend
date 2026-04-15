@@ -32,7 +32,7 @@ export default function HomeWorkCard({
             src={getStrapiImageUrl(proyecto.foto_portada)}
             alt={proyecto.titulo}
             fill
-            className="object-cover transition-transform duration-500 ease-out group-hover/img:scale-110"
+            className="object-cover"
             sizes="472px"
             priority={priority}
           />

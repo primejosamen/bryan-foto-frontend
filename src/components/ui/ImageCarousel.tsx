@@ -1,20 +1,19 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { StrapiImage } from '@/models';
-import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import type { StrapiMedia } from '@/models';
+import StrapiMediaRenderer from '@/components/ui/StrapiMediaRenderer';
 
 interface Props {
-  images: StrapiImage | StrapiImage[];
+  images: StrapiMedia | StrapiMedia[];
   alt: string;
   sizes: string;
   quality?: number;
 }
 
 /** Normalise single-or-array into a guaranteed array. */
-function normalizeImages(input: StrapiImage | StrapiImage[]): StrapiImage[] {
+function normalizeImages(input: StrapiMedia | StrapiMedia[]): StrapiMedia[] {
   return Array.isArray(input) ? input : [input];
 }
 
@@ -67,12 +66,10 @@ export default function ImageCarousel({
           transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           className="absolute inset-0"
         >
-          <Image
-            src={getStrapiImageUrl(images[idx])}
+          <StrapiMediaRenderer
+            media={images[idx]}
             alt={`${alt} — ${idx + 1}`}
-            fill
-            className="transition-transform duration-500 ease-out group-hover:scale-110"
-            style={{ objectFit: 'cover' }}
+            className=""
             sizes={sizes}
             quality={quality}
           />

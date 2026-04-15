@@ -17,8 +17,8 @@ export default async function AboutPage() {
 }
 
 export const metadata = {
-  title: 'About | Bryan Photography',
-  description: 'Conoce más sobre Bryan Photography',
+  title: 'About | Bryan Torres',
+  description: 'Conoce más sobre Bryan Torres',
 };
 
 export const revalidate = 60;

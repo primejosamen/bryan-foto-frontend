@@ -88,7 +88,7 @@ export default function HomeEditorialGift({ text, media }: Props) {
                 <img
                   src={url}
                   alt="Animated content"
-                  className="transition-transform duration-500 ease-out group-hover:scale-110"
+                  className=""
                   style={{
                     width: '100%',
                     height: '100%',
@@ -100,7 +100,7 @@ export default function HomeEditorialGift({ text, media }: Props) {
                   src={url}
                   alt="Media content"
                   fill
-                  className="transition-transform duration-500 ease-out group-hover:scale-110"
+                  className=""
                   style={{ objectFit: 'cover' }}
                   sizes="(max-width: 768px) 100vw, 472px"
                   quality={100}

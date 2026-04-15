@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const global = await getGlobalConfig();
   
   return {
-    title: global?.siteName || 'Bryan Photography',
+    title: global?.siteName || 'Bryan Torres',
     description: global?.siteDescription || 'Professional Photography Portfolio',
   };
 }
