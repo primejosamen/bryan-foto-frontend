@@ -16,14 +16,20 @@ uniform float uFilmStrength;
 uniform float uFilmScale;
 
 uniform vec3 uCameraPos;
+uniform float uEnvRotation;
 
 varying vec3 vNormalW;
 varying vec3 vPosW;
 
 float saturate(float x) { return clamp(x, 0.0, 1.0); }
 
+vec3 rotateY(vec3 v, float a) {
+  float c = cos(a); float s = sin(a);
+  return vec3(v.x * c + v.z * s, v.y, -v.x * s + v.z * c);
+}
+
 vec3 envSample(vec3 dir) {
-  return textureCube(uEnvMap, dir).rgb * uEnvIntensity;
+  return textureCube(uEnvMap, rotateY(dir, uEnvRotation)).rgb * uEnvIntensity;
 }
 
 vec3 envSampleRough(vec3 dir, float roughness) {

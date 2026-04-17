@@ -107,7 +107,8 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
           uRoughness: { value: 0.01 },
           uSpecBoost: { value: 1.10 },
           uFilmStrength: { value: 0.65 },
-          uFilmScale: { value: 2.24 }
+          uFilmScale: { value: 2.24 },
+          uEnvRotation: { value: 0.0 },
         },
       });
       mat.toneMapped = false;
@@ -139,8 +140,8 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
     const rawBox = new THREE.Box3().setFromObject(logo);
     const rawWidth = rawBox.max.x - rawBox.min.x;
 
-    // Escalar para que el logo llene el 85% del ancho visible
-    const TARGET_FILL = 0.85;
+    // Escalar para que el logo llene un % del ancho visible (responsive)
+    const TARGET_FILL = isMobile ? 0.65 : size.width < 1024 ? 0.60 : 0.70;
     const s = (visibleWidth * TARGET_FILL) / Math.max(rawWidth, 0.01);
 
     // Centrar el logo en el frustum visible
@@ -189,10 +190,14 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
       persp.position.x += (targetX - persp.position.x) * cameraLerp;
       persp.position.y += (targetY - persp.position.y) * cameraLerp;
 
-      // Hover zoom: dolly camera closer smoothly
-      const targetZ = input.isHovered ? cameraBasePos.z - 0.8 : cameraBasePos.z;
+      // Hover zoom: dolly camera closer smoothly (scaled for screen size)
+      const hoverDolly = isMobile ? 0.4 : 0.8;
+      const targetZ = input.isHovered ? cameraBasePos.z - hoverDolly : cameraBasePos.z;
       persp.position.z += (targetZ - persp.position.z) * 0.06;
 
+      persp.lookAt(c);
+    } else {
+      // During orbit, keep camera locked on the logo center
       persp.lookAt(c);
     }
 
@@ -231,11 +236,16 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
 
     // Rotar alrededor del centro del logo (translate → rotate → translate back)
     if (groupRef.current) {
-      const c = logoCenterRef.current;
+      // Reset group transform before recalculating center
       groupRef.current.position.set(0, 0, 0);
       groupRef.current.rotation.set(0, 0, 0);
 
-      // Translate to center, rotate, translate back
+      // Recalculate center from the actual logo mesh (accounts for scale changes)
+      const box = new THREE.Box3().setFromObject(groupRef.current);
+      box.getCenter(logoCenterRef.current);
+      const c = logoCenterRef.current;
+
+      // Pivot rotation: translate to origin, rotate, translate back
       groupRef.current.position.set(-c.x, -c.y, -c.z);
       groupRef.current.rotation.set(
         input.rotationX,
@@ -246,12 +256,13 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
       groupRef.current.position.add(c);
     }
 
-    // ── Scroll-based scale + shift on desktop ──
-    const sp = (!isMobile ? (scrollProgress.current ?? 0) : 0);
+    // ── Scroll-based scale + shift (desktop only) ──
+    const sp = isMobile ? 0 : (scrollProgress.current ?? 0);
 
-    // Scale down: 100% → 35% of original size
+    // Scale down: desktop 100% → 35%, mobile 100% → 50%
+    const shrinkFactor = isMobile ? 0.50 : 0.65;
     if (sp > 0 && logo) {
-      const targetScale = baseScaleRef.current * (1 - sp * 0.65);
+      const targetScale = baseScaleRef.current * (1 - sp * shrinkFactor);
       currentScaleRef.current += (targetScale - currentScaleRef.current) * 0.12;
       logo.scale.setScalar(currentScaleRef.current);
     } else if (logo) {
@@ -266,8 +277,20 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
     const shiftFraction = (size.height / 2 - headerCenter) / size.height;
     const shift = shiftFraction * 2 * halfH;
 
-    // ── Horizontal shift: move logo to the right on desktop when scrolled ──
-    const hShift = sp * halfW * -0.40;
+    // ── Horizontal shift: center logo in the white space to the right of content ──
+    const CONTENT_MAX_W = 1436;  // HomeHeroGrid maxWidth
+    const PAD = 24;              // 1.5rem padding each side
+    const contentW = Math.min(CONTENT_MAX_W, size.width - PAD * 2);
+    const whiteSpaceW = size.width - PAD * 2 - contentW;
+    let hShift = 0;
+    if (!isMobile && whiteSpaceW > 40) {
+      // Center of the white gap as a fraction of viewport (0 = left, 1 = right)
+      const whiteCenter = (PAD + contentW + size.width - PAD) / 2;
+      const shift01 = Math.min((whiteCenter / size.width - 0.5) * 2, 1.0);
+      hShift = -sp * halfW * shift01;
+    } else if (isMobile) {
+      hShift = sp * halfW * -0.20;
+    }
 
     persp.projectionMatrix.makePerspective(
       -halfW + hShift,
@@ -279,8 +302,13 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
     );
     persp.projectionMatrixInverse.copy(persp.projectionMatrix).invert();
 
+    // ── Rotar iluminación del environment map (animada) ──
+    const elapsed = performance.now() / 1000;
+    const envAngle = elapsed * 0.20;
+
     for (const mat of matsRef.current) {
       (mat.uniforms.uCameraPos.value as THREE.Vector3).copy(persp.position);
+      mat.uniforms.uEnvRotation.value = envAngle;
     }
   });
 
@@ -341,7 +369,7 @@ export default function Logo3D() {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100vw',
+          right: 0,
           height: '100vh',
           zIndex: 15,
           pointerEvents: 'none',

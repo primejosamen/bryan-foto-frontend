@@ -13,6 +13,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { About } from '@/models';
 import type { ContactInfo } from '@/models';
+import GlassNavBar from '@/components/ui/GlassNavBar';
+import BackButton from '@/components/ui/BackButton';
 import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 import LogoAbout3D from '@/components/ui/LogoAbout3D';
 
@@ -60,18 +62,7 @@ export default function AboutSection({ about, contacto }: AboutSectionProps) {
       <LogoAbout3D />
 
       {/* ── BACK BUTTON ── */}
-      <div className="fixed top-4 left-4 z-[9999] md:top-8 md:left-8 pointer-events-auto">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 font-ibm-mono text-[16px] font-normal tracking-[-0.05em] transition-colors hover:opacity-70 cursor-pointer pointer-events-auto"
-          style={{ color: '#ef4444' }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Back
-        </Link>
-      </div>
+      <BackButton />
 
       {/* ── LAYOUT ── */}
       <div className="relative z-5 grid grid-cols-1 md:grid-cols-4 gap-2 min-h-screen pointer-events-none text-black p-6 md:p-0">
@@ -136,7 +127,7 @@ export default function AboutSection({ about, contacto }: AboutSectionProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
-                className="relative aspect-[4/5]"
+                className="relative aspect-4/5"
               >
                 <Image
                   src={getStrapiImageUrl(block.file)}

@@ -29,9 +29,9 @@ export default function HomeAboutPreview({ image, text }: Props) {
       style={{ maxWidth: `${TOTAL_W}px` }}
     >
       {/* Col 1: Imagen */}
-      <ScrollReveal delay={0}>
+      <ScrollReveal delay={0} className="md:flex-1 md:basis-0 md:min-w-0">
         <div
-          className="group relative w-full overflow-hidden md:w-[472px] md:shrink-0"
+          className="group relative w-full overflow-hidden"
           style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
         >
           <StrapiMediaRenderer
@@ -44,12 +44,12 @@ export default function HomeAboutPreview({ image, text }: Props) {
       </ScrollReveal>
 
       {/* Col 2: Espacio vacío (solo desktop) */}
-      <div className="hidden md:block md:shrink-0" style={{ width: `${SLOT_GAP + SLOT_W + SLOT_GAP}px` }} />
+      <div className="hidden md:block md:flex-1 md:basis-0 md:min-w-0" />
 
       {/* Col 3: Texto */}
-      <ScrollReveal delay={300}>
+      <ScrollReveal delay={300} className="md:flex-1 md:basis-0 md:min-w-0">
         <div
-          className="w-full md:w-[472px]"
+          className="w-full"
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: '16px',

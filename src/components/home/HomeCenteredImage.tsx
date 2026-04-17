@@ -29,7 +29,7 @@ export default function HomeCenteredImage({ image }: Props) {
     >
       <ScrollReveal>
         <div
-          className="group relative w-full overflow-hidden md:w-[472px] md:ml-[482px]"
+          className="group relative w-full overflow-hidden md:w-1/3 md:ml-[33.33%]"
           style={{ aspectRatio: `${SLOT_W} / ${IMG_H}` }}
         >
           <StrapiMediaRenderer

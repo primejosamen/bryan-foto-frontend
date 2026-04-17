@@ -25,12 +25,12 @@ interface Props {
 export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {
   return (
     <section
-      className="w-full flex flex-col gap-2 px-4 md:px-0 md:flex-row md:gap-[10px]"
+      className="w-full flex flex-col gap-2 px-4 md:px-0 md:flex-row md:gap-2.5"
       style={{ maxWidth: `${TOTAL_W}px` }}
     >
-      <ScrollReveal delay={0}>
+      <ScrollReveal delay={0} className="md:flex-1 md:basis-0 md:min-w-0">
         <div
-          className="group relative w-full overflow-hidden md:w-[713px]"
+          className="group relative w-full overflow-hidden"
           style={{ aspectRatio: `${HALF_W} / ${IMG_H}` }}
         >
           <ImageCarousel
@@ -41,9 +41,9 @@ export default function HomeFeaturedDuo({ imageLeft, imageRight }: Props) {
         </div>
       </ScrollReveal>
 
-      <ScrollReveal delay={200}>
+      <ScrollReveal delay={200} className="md:flex-1 md:basis-0 md:min-w-0">
         <div
-          className="group relative w-full overflow-hidden md:w-[713px]"
+          className="group relative w-full overflow-hidden"
           style={{ aspectRatio: `${HALF_W} / ${IMG_H}` }}
         >
           <ImageCarousel

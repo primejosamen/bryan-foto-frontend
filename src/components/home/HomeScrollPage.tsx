@@ -39,6 +39,8 @@ export default function HomeScrollPage({ data }: Props) {
           gap: `${SECTION_GAP}px`,
           paddingTop: `${SECTION_GAP}px`,
           paddingBottom: '120px',
+          paddingLeft: '1.5rem',
+          paddingRight: '1.5rem',
         }}
       >
         {/* Sección 1: Hero Grid — 3 fotos individuales */}

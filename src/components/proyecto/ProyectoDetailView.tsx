@@ -11,6 +11,10 @@ import {
 } from 'framer-motion';
 import type { Project, StrapiImage } from '@/models';
 import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import GlassNavBar from '@/components/ui/GlassNavBar';
+import GlassChevron from '@/components/ui/GlassChevron';
+import GlassLoupe from '@/components/ui/GlassLoupe';
+import BackButton from '@/components/ui/BackButton';
 
 /* ───────────────────────────── props ─────────────────────────── */
 interface Props {
@@ -56,7 +60,7 @@ function PhotoCard({
       onClick={onClick}
     >
       <motion.div
-        className="relative w-full h-full will-change-transform [transform:translateZ(0)] [backface-visibility:hidden]"
+        className="relative w-full h-full will-change-transform transform-[translateZ(0)] backface-hidden"
         style={{ y }}
       >
         <Image
@@ -77,7 +81,13 @@ function PhotoCard({
 export default function ProyectoDetailView({ proyecto }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const [mouseClient, setMouseClient] = useState({ cx: 0, cy: 0 });
+  const imgContainerRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTouchZoomRef = useRef(false);
 
   const todasLasFotos = useMemo(
     () =>
@@ -86,6 +96,67 @@ export default function ProyectoDetailView({ proyecto }: Props) {
       ) as StrapiImage[],
     [proyecto]
   );
+
+  /**
+   * Convert a client (x, y) hit on the imgContainer to image-space 0–100 coords,
+   * accounting for object-contain letterboxing.
+   */
+  const clientToImagePercent = useCallback(
+    (clientX: number, clientY: number) => {
+      const el = imgContainerRef.current;
+      if (!el || lightboxIndex === null) return { x: 50, y: 50 };
+      const rect = el.getBoundingClientRect();
+      const foto = todasLasFotos[lightboxIndex];
+      const imgW = foto.width || 4;
+      const imgH = foto.height || 5;
+      const imgAspect = imgW / imgH;
+      const contAspect = rect.width / rect.height;
+
+      // Compute the rendered image rect inside the container (object-contain)
+      let renderedW: number, renderedH: number, offsetX: number, offsetY: number;
+      if (imgAspect > contAspect) {
+        // Image wider than container → pillarboxed top/bottom
+        renderedW = rect.width;
+        renderedH = rect.width / imgAspect;
+        offsetX = 0;
+        offsetY = (rect.height - renderedH) / 2;
+      } else {
+        // Image taller than container → letterboxed left/right
+        renderedH = rect.height;
+        renderedW = rect.height * imgAspect;
+        offsetX = (rect.width - renderedW) / 2;
+        offsetY = 0;
+      }
+
+      const x = ((clientX - rect.left - offsetX) / renderedW) * 100;
+      const y = ((clientY - rect.top - offsetY) / renderedH) * 100;
+      return { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) };
+    },
+    [lightboxIndex, todasLasFotos],
+  );
+
+  /* ── Non-passive touchmove so preventDefault() works for loupe drag ── */
+  useEffect(() => {
+    const el = imgContainerRef.current;
+    if (!el) return;
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isTouchZoomRef.current && touchTimerRef.current) {
+        clearTimeout(touchTimerRef.current);
+        touchTimerRef.current = null;
+        return;
+      }
+      if (isTouchZoomRef.current) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        setZoomPos(clientToImagePercent(touch.clientX, touch.clientY));
+        setMouseClient({ cx: touch.clientX, cy: touch.clientY });
+      }
+    };
+
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => el.removeEventListener('touchmove', handleTouchMove);
+  });
 
   /* ── Track which slide is in view ── */
   useEffect(() => {
@@ -140,17 +211,43 @@ export default function ProyectoDetailView({ proyecto }: Props) {
     [todasLasFotos.length],
   );
 
+  /* ── Reset zoom when image changes ── */
+  useEffect(() => {
+    setZoom(false);
+    setZoomPos({ x: 50, y: 50 });
+  }, [lightboxIndex]);
+
+  /* ── Lock body scroll when lightbox is open ── */
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const prev = document.body.style.overflow;
+    const prevTouch = document.body.style.touchAction;
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    return () => {
+      document.body.style.overflow = prev;
+      document.body.style.touchAction = prevTouch;
+    };
+  }, [lightboxIndex]);
+
   /* ── Keyboard nav for lightbox ── */
   useEffect(() => {
     if (lightboxIndex === null) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') goLightbox(1);
       else if (e.key === 'ArrowLeft') goLightbox(-1);
-      else if (e.key === 'Escape') setLightboxIndex(null);
+      else if (e.key === 'Escape') {
+        if (zoom) {
+          setZoom(false);
+          setZoomPos({ x: 50, y: 50 });
+        } else {
+          setLightboxIndex(null);
+        }
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [lightboxIndex, goLightbox]);
+  }, [lightboxIndex, goLightbox, zoom]);
 
   /* ── Click thumbnail → scroll to section ── */
   const scrollTo = useCallback((i: number) => {
@@ -162,30 +259,13 @@ export default function ProyectoDetailView({ proyecto }: Props) {
 
   return (
     <div className="relative bg-white min-h-screen">
-      {/* Back link */}
-      <div className="fixed top-4 left-4 z-[9999] md:top-8 md:left-8 pointer-events-auto">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 font-ibm-mono text-[16px] font-normal tracking-[-0.05em] text-red-500! transition-colors hover:text-red-700! cursor-pointer pointer-events-auto"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Back
-        </Link>
-      </div>
+      {/* Back link with traveling glass */}
+      <BackButton />
 
       {/* Session info bar */}
       <div className="fixed z-10 left-0 right-0 top-1/2 -translate-y-1/2 flex flex-col items-end pointer-events-none px-4 md:items-stretch md:px-10 md:grid md:grid-cols-[1fr_2fr_1fr] md:gap-10">
         <div className="flex items-center self-start md:self-auto">
-          <h1 className="font-ibm-mono text-[clamp(2rem,4.5vw,64px)] font-bold leading-tight text-red-500 tracking-[-0.085em]">
+          <h1 className="font-ibm-mono text-xl md:text-4xl font-bold leading-tight text-red-500 tracking-[-0.085em]">
             {proyecto.titulo}
           </h1>
         </div>
@@ -237,7 +317,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                 return (
                   <div
                     key={foto.id}
-                    className="relative overflow-hidden w-[130px] h-[82px]"
+                    className="relative overflow-hidden w-32.5 h-20.5"
                   >
                     <motion.button
                       type="button"
@@ -255,7 +335,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                         duration: 0.28,
                         ease: [0.22, 1, 0.36, 1],
                       }}
-                      className="absolute top-0 right-0 block overflow-hidden will-change-transform [transform:translateZ(0)] [backface-visibility:hidden] w-[130px] h-[82px]"
+                      className="absolute top-0 right-0 block overflow-hidden will-change-transform transform-[translateZ(0)] backface-hidden w-32.5 h-20.5"
                     >
                       <div className="relative w-full h-full">
                         <Image
@@ -290,74 +370,198 @@ export default function ProyectoDetailView({ proyecto }: Props) {
             transition={{ duration: 0.25 }}
             onClick={() => setLightboxIndex(null)}
           >
+            {/* Semi-transparent backdrop (no blur — blur is on the card) */}
             <motion.div
-              className="absolute inset-0 bg-white/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/30"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             />
 
-            <motion.div
-              className="relative z-10 w-[85vw] h-[85vh] will-change-transform [transform:translateZ(0)] [backface-visibility:hidden]"
-              initial={{ scale: 0.96, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Image
-                src={getStrapiImageUrl(todasLasFotos[lightboxIndex])}
-                alt={`${proyecto.titulo} — ${lightboxIndex + 1}`}
-                fill
-                className="object-contain"
-                sizes="85vw"
-                quality={95}
-              />
+            {/* Glass card — auto-scaled to photo aspect ratio */}
+            {(() => {
+              const foto = todasLasFotos[lightboxIndex];
+              const fw = foto.width || 4;
+              const fh = foto.height || 5;
+              const aspect = fw / fh;
+              // Responsive padding: smaller on mobile
+              const isMobileView = typeof window !== 'undefined' && window.innerWidth < 768;
+              const pad = isMobileView ? 20 : 95;
+              const p2 = pad * 2;
+              return (
+                <motion.div
+                  className="relative z-10 flex items-center justify-center"
+                  initial={{ scale: 0.96, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.96, opacity: 0 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    width: `min(98vw, calc((96vh - ${p2}px) * ${aspect} + ${p2}px))`,
+                    height: `min(96vh, calc((98vw - ${p2}px) / ${aspect} + ${p2}px))`,
+                    maxWidth: '99vw',
+                    maxHeight: '98vh',
+                  }}
+                >
+                  {/* Frosted glass background */}
+                  <div
+                    className="absolute inset-0 rounded-2xl overflow-hidden"
+                    style={{
+                      backdropFilter: 'blur(24px) saturate(1.4)',
+                      WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
+                      background: 'rgba(255,255,255,0.25)',
+                      border: '1px solid rgba(255,255,255,0.35)',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                    }}
+                  />
+                  {/* Image fills card minus padding */}
+                  <div
+                    ref={imgContainerRef}
+                    className="relative overflow-hidden"
+                    style={{
+                      width: `calc(100% - ${pad * 2}px)`,
+                      height: `calc(100% - ${pad * 2}px)`,
+                      cursor: zoom ? 'none' : 'zoom-in',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!zoom) {
+                        setZoom(true);
+                        setZoomPos(clientToImagePercent(e.clientX, e.clientY));
+                        setMouseClient({ cx: e.clientX, cy: e.clientY });
+                      } else {
+                        setZoom(false);
+                        setZoomPos({ x: 50, y: 50 });
+                      }
+                    }}
+                    onMouseMove={(e) => {
+                      if (!zoom) return;
+                      setZoomPos(clientToImagePercent(e.clientX, e.clientY));
+                      setMouseClient({ cx: e.clientX, cy: e.clientY });
+                    }}
+                    onMouseLeave={() => {
+                      if (zoom) {
+                        setZoom(false);
+                        setZoomPos({ x: 50, y: 50 });
+                      }
+                    }}
+                    onTouchStart={(e) => {
+                      // Long-press to activate loupe on mobile
+                      const touch = e.touches[0];
+                      const startX = touch.clientX;
+                      const startY = touch.clientY;
+                      touchTimerRef.current = setTimeout(() => {
+                        isTouchZoomRef.current = true;
+                        setZoom(true);
+                        setZoomPos(clientToImagePercent(startX, startY));
+                        setMouseClient({ cx: startX, cy: startY });
+                      }, 300);
+                    }}
+                    onTouchMove={undefined}
+                    onTouchEnd={() => {
+                      if (touchTimerRef.current) {
+                        clearTimeout(touchTimerRef.current);
+                        touchTimerRef.current = null;
+                      }
+                      if (isTouchZoomRef.current) {
+                        isTouchZoomRef.current = false;
+                        setZoom(false);
+                        setZoomPos({ x: 50, y: 50 });
+                      }
+                    }}
+                    onTouchCancel={() => {
+                      if (touchTimerRef.current) {
+                        clearTimeout(touchTimerRef.current);
+                        touchTimerRef.current = null;
+                      }
+                      if (isTouchZoomRef.current) {
+                        isTouchZoomRef.current = false;
+                        setZoom(false);
+                        setZoomPos({ x: 50, y: 50 });
+                      }
+                    }}
+                  >
+                    <Image
+                      src={getStrapiImageUrl(foto)}
+                      alt={`${proyecto.titulo} — ${lightboxIndex + 1}`}
+                      fill
+                      className="object-contain"
+                      sizes="90vw"
+                      quality={95}
+                      draggable={false}
+                    />
+                  </div>
+
+                  {/* Floating loupe — follows cursor when zoomed */}
+                  {zoom && (() => {
+                    const vw = typeof window !== 'undefined' ? window.innerWidth : 1000;
+                    const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+                    const isMobile = vw < 768;
+                    const loupeW = isMobile ? Math.min(180, vw * 0.45) : 900;
+                    const loupeH = isMobile ? Math.min(180, vw * 0.45) : 580;
+                    const zoomLevel = isMobile ? 2.5 : 1.8;
+                    // Mobile: appear above finger; Desktop: offset left
+                    const offsetX = isMobile ? 0 : -500;
+                    const offsetY = isMobile ? -(loupeH / 2 + 20) : 1;
+                    // Clamp loupe position to viewport
+                    const rawLeft = mouseClient.cx - loupeW / 2 + offsetX;
+                    const rawTop = mouseClient.cy - loupeH / 2 + offsetY;
+                    const clampedLeft = Math.max(4, Math.min(rawLeft, vw - loupeW - 4));
+                    const clampedTop = Math.max(4, Math.min(rawTop, vh - loupeH - 4));
+                    return (
+                      <div
+                        className="fixed z-50 overflow-hidden pointer-events-none"
+                        style={{
+                          width: loupeW,
+                          height: loupeH,
+                          left: clampedLeft,
+                          top: clampedTop,
+                          borderRadius: '50%',
+                          background: 'transparent',
+                        }}
+                      >
+                        <GlassLoupe
+                          imageSrc={getStrapiImageUrl(foto)}
+                          zoomCenter={zoomPos}
+                          zoomLevel={zoomLevel}
+                          imageAspect={(foto.width || 1) / (foto.height || 1)}
+                        />
+                      </div>
+                    );
+                  })()}
+
+              {/* Prev arrow — on top of the photo */}
+              {lightboxIndex > 0 && (
+                <button
+                  className="absolute left-8 top-1/2 -translate-y-1/2 z-20 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goLightbox(-1);
+                  }}
+                >
+                  <div className="relative w-12 h-12">
+                    <GlassChevron direction="left" />
+                  </div>
+                </button>
+              )}
+
+              {/* Next arrow — on top of the photo */}
+              {lightboxIndex < todasLasFotos.length - 1 && (
+                <button
+                  className="absolute right-8 top-1/2 -translate-y-1/2 z-20 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goLightbox(1);
+                  }}
+                >
+                  <div className="relative w-12 h-12">
+                    <GlassChevron direction="right" />
+                  </div>
+                </button>
+              )}
             </motion.div>
-
-            {/* Prev arrow */}
-            {lightboxIndex > 0 && (
-              <button
-                className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 p-3 text-black/40 hover:text-black transition-colors cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goLightbox(-1);
-                }}
-              >
-                <svg
-                  width="40"
-                  height="40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-            )}
-
-            {/* Next arrow */}
-            {lightboxIndex < todasLasFotos.length - 1 && (
-              <button
-                className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 p-3 text-black/40 hover:text-black transition-colors cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goLightbox(1);
-                }}
-              >
-                <svg
-                  width="40"
-                  height="40"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            )}
+              );
+            })()}
 
             <button
               className="absolute top-8 right-8 z-20 text-black/50 hover:text-black transition-colors"
