@@ -42,9 +42,9 @@ export default function HomeEditorialGift({ text, media }: Props) {
       style={{ maxWidth: `${TOTAL_W}px` }}
     >
       {/* Col 1: Texto editorial */}
-      <ScrollReveal delay={0}>
+      <ScrollReveal delay={0} className="md:flex-1 md:basis-0 md:min-w-0">
         <div
-          className="w-full md:w-[472px]"
+          className="w-full"
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: '16px',
@@ -58,12 +58,12 @@ export default function HomeEditorialGift({ text, media }: Props) {
       </ScrollReveal>
 
       {/* Col 2: Espacio vacío (solo desktop) */}
-      <div className="hidden md:block md:shrink-0" style={{ width: `${SLOT_GAP + SLOT_W + SLOT_GAP}px` }} />
+      <div className="hidden md:block md:flex-1 md:basis-0 md:min-w-0" />
 
       {/* Col 3: Gif / Video */}
-      <ScrollReveal delay={250}>
+      <ScrollReveal delay={250} className="md:flex-1 md:basis-0 md:min-w-0">
         <div
-          className="w-full md:w-[472px] flex justify-center items-start"
+          className="w-full flex justify-center items-start"
         >
           {video ? (
             <video
@@ -72,7 +72,7 @@ export default function HomeEditorialGift({ text, media }: Props) {
               loop
               muted
               playsInline
-              className="w-full md:w-[472px]"
+              className="w-full"
               style={{
                 aspectRatio: `${SLOT_W} / ${MEDIA_H}`,
                 objectFit: 'cover',
@@ -80,7 +80,7 @@ export default function HomeEditorialGift({ text, media }: Props) {
             />
           ) : (
             <div
-              className="group relative w-full overflow-hidden md:w-[472px]"
+              className="group relative w-full overflow-hidden"
               style={{ aspectRatio: `${SLOT_W} / ${MEDIA_H}` }}
             >
               {media.mime === 'image/gif' ? (

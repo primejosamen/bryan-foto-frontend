@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Project } from '@/models';
 import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import GlassChevron from '@/components/ui/GlassChevron';
 
 /* ═══════════════════════ MEDIDAS DEL DISEÑO ═══════════════════ */
 const SLOT_COUNT_DESKTOP = 3;
@@ -199,16 +200,16 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
           style={{ height: `${headerH}px` }}
         />
 
-        {/* MAIN — móvil: márgenes laterales; desktop: ancho fijo como antes */}
+        {/* MAIN — márgenes laterales consistentes */}
         <div
-          className="relative z-5 px-4 md:px-0"
+          className="relative z-5 px-4 md:px-6"
           style={{ height: `calc(100vh - ${headerH}px)` }}
         >
           <div
-            className={`flex h-full ${isSingleSlot ? 'w-full max-w-full' : ''}`}
+            className={`flex h-full ${isSingleSlot ? 'w-full max-w-full' : 'w-full'}`}
             style={{
               gap: `${SLOT_GAP}px`,
-              width: isSingleSlot ? '100%' : `${slotsBlockWidthPx}px`,
+              maxWidth: isSingleSlot ? '100%' : `${slotsBlockWidthPx}px`,
             }}
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
@@ -304,9 +305,9 @@ function CoverSlot({
     <Link
       href={`/proyecto/${activeProject.slug}`}
       className={`relative z-10 block h-full overflow-visible cursor-pointer ${
-        fullWidth ? 'min-w-0 flex-1 shrink' : 'w-[472px] shrink-0'
+        fullWidth ? 'min-w-0 flex-1 shrink' : 'flex-1 min-w-0 shrink'
       }`}
-      style={fullWidth ? { width: '100%', minWidth: 0, cursor: 'pointer' } : { cursor: 'pointer' }}
+      style={{ cursor: 'pointer', maxWidth: fullWidth ? undefined : `${SLOT_W}px` }}
     >
       <div className="group/cover absolute inset-0 z-0 overflow-hidden cursor-pointer">
         {/* Imagen anterior — se queda estática debajo */}
@@ -366,22 +367,22 @@ function CoverSlot({
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPrev(); }}
-              className="absolute left-4 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center text-white transition-all duration-300 pointer-events-auto"
+              className="absolute left-4 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center pointer-events-auto"
               aria-label="Anterior"
             >
-              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
+              <div className="relative w-12 h-12">
+                <GlassChevron direction="left" />
+              </div>
             </button>
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNext(); }}
-              className="absolute right-4 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center text-white transition-all duration-300 pointer-events-auto"
+              className="absolute right-4 top-1/2 z-20 -translate-y-1/2 flex items-center justify-center pointer-events-auto"
               aria-label="Siguiente"
             >
-              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
+              <div className="relative w-12 h-12">
+                <GlassChevron direction="right" />
+              </div>
             </button>
           </>
         )}
