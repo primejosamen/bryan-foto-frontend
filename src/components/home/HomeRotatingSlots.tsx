@@ -13,23 +13,21 @@ const SLOT_W = 472;
 const SLOT_GAP = 10;
 const HEADER_H = 170;
 const HEADER_H_MOBILE = 120;
-/** max-width 767px: un solo slot a ancho completo + header más bajo */
 const MOBILE_MAX = 767;
-const NAV_BOTTOM = 65;
-const NAV_GAP = 10;
 
 /* Timing base */
-const ROTATION_INTERVAL = 3000;  // pausa entre rondas
-const STAGGER_DELAY = 800;       // pausa entre slots dentro de una ronda
+const ROTATION_INTERVAL = 3000;
+const STAGGER_DELAY = 800;
 
-/* Duración de transición */
-const TRANSITION_MS = 1200;      // duración de la animación CSS
+/* Crossfade (CSS transition, no flash) */
+const CROSSFADE_MS = 1400;
 
-/* Hold visual (mini pausa perceptual antes del cambio) */
-const HOLD_MS = 60;              // anticipación muy breve
+/* Ken Burns — longer than display time so zoom never fully completes */
+const KB_DURATION_MS = 10000;
+const KB_VARIANT_COUNT = 5;
 
 /* ═══════════════════════ KEYFRAMES CSS ═══════════════════════ */
-const STYLE_ID = 'slot-cinematic-keyframes';
+const STYLE_ID = 'slot-kenburns-keyframes';
 
 function injectKeyframes() {
   if (typeof document === 'undefined') return;
@@ -38,17 +36,36 @@ function injectKeyframes() {
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
-    @keyframes slot-enter {
-      0% {
-        opacity: 0;
-      }
-      100% {
-        opacity: 1;
-      }
+    @keyframes kb-v0 {
+      from { transform: scale(1) translate(0%, 0%); }
+      to   { transform: scale(1.08) translate(-1.5%, -1%); }
+    }
+    @keyframes kb-v1 {
+      from { transform: scale(1) translate(0%, 0%); }
+      to   { transform: scale(1.06) translate(1%, -1.5%); }
+    }
+    @keyframes kb-v2 {
+      from { transform: scale(1) translate(0%, 0%); }
+      to   { transform: scale(1.07) translate(-0.5%, 1.2%); }
+    }
+    @keyframes kb-v3 {
+      from { transform: scale(1.06) translate(1%, 0.5%); }
+      to   { transform: scale(1) translate(0%, 0%); }
+    }
+    @keyframes kb-v4 {
+      from { transform: scale(1.05) translate(-1%, -0.8%); }
+      to   { transform: scale(1) translate(0.5%, 0.5%); }
     }
   `;
   document.head.appendChild(style);
 }
+
+/* ═══════════════════════ STAGGER PATTERNS ════════════════════ */
+const STAGGER_PATTERNS = [
+  [0, 1, 2], // ida: 1→2→3
+  [2, 1, 0], // vuelta: 3→2→1
+  [1, 0, 2], // centro hacia afuera: 2→1→3
+];
 
 /* ═══════════════════════ TIPOS ═══════════════════════════════ */
 interface Slot {
@@ -58,8 +75,6 @@ interface Slot {
 interface Props {
   proyectos: Project[];
 }
-
-type SlotPhase = 'idle' | 'hold';
 
 /* ═══════════════════════ COMPONENTE PRINCIPAL ═════════════════ */
 export default function HomeRotatingSlots({ proyectos }: Props) {
@@ -77,7 +92,6 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
     return proyectos.filter((p) => p.visible).sort((a, b) => a.orden - b.orden);
   }, [proyectos]);
 
-  /* Desktop: 6 proyectos en 3 slots (2 por slot). Móvil: todos en 1 slot rotativo */
   const slots = useMemo<Slot[]>(() => {
     if (proyectosVisibles.length === 0) return [];
 
@@ -100,9 +114,7 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
 
   const [activeIndices, setActiveIndices] = useState<number[]>(() => slots.map(() => 0));
   const [slotTicks, setSlotTicks] = useState<number[]>(() => slots.map(() => 0));
-  const [slotPhases, setSlotPhases] = useState<SlotPhase[]>(() => slots.map(() => 'idle'));
 
-  /* Sincronizar arrays si cambia la data */
   useEffect(() => {
     setActiveIndices((prev) =>
       slots.map((slot, i) => {
@@ -110,14 +122,12 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
         return slot.projects.length > 0 ? prevValue % slot.projects.length : 0;
       })
     );
-
     setSlotTicks((prev) => slots.map((_, i) => prev[i] ?? 0));
-    setSlotPhases((prev) => slots.map((_, i) => prev[i] ?? 'idle'));
   }, [slots]);
 
   const [paused, setPaused] = useState(false);
 
-  /* Scheduler secuencial: slot 0 → 1 → 2 → 0 → … con intervalos fijos */
+  /* ── Scheduler con patrones de stagger alternados ── */
   useEffect(() => {
     if (paused || slots.length === 0) return;
 
@@ -127,47 +137,48 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
 
     if (rotatableIndices.length === 0) return;
 
+    let patternIdx = 0;
     let pointer = 0;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 
+    const getCurrentOrder = (): number[] => {
+      if (rotatableIndices.length <= 1) return rotatableIndices;
+      const pattern = STAGGER_PATTERNS[patternIdx % STAGGER_PATTERNS.length];
+      return pattern
+        .filter((i) => i < rotatableIndices.length)
+        .map((i) => rotatableIndices[i]);
+    };
+
+    let currentOrder = getCurrentOrder();
+
     const tick = () => {
       if (cancelled) return;
-      const slotIdx = rotatableIndices[pointer];
+      const slotIdx = currentOrder[pointer];
 
-      setSlotPhases((prev) => {
+      setActiveIndices((prev) => {
         const next = [...prev];
-        next[slotIdx] = 'hold';
+        if (!slots[slotIdx]) return prev;
+        next[slotIdx] = (next[slotIdx] + 1) % slots[slotIdx].projects.length;
         return next;
       });
 
-      timer = setTimeout(() => {
-        if (cancelled) return;
+      setSlotTicks((prev) => {
+        const next = [...prev];
+        next[slotIdx] = (next[slotIdx] ?? 0) + 1;
+        return next;
+      });
 
-        setActiveIndices((prev) => {
-          const next = [...prev];
-          if (!slots[slotIdx]) return prev;
-          next[slotIdx] = (next[slotIdx] + 1) % slots[slotIdx].projects.length;
-          return next;
-        });
+      pointer += 1;
 
-        setSlotTicks((prev) => {
-          const next = [...prev];
-          next[slotIdx] = (next[slotIdx] ?? 0) + 1;
-          return next;
-        });
-
-        setSlotPhases((prev) => {
-          const next = [...prev];
-          next[slotIdx] = 'idle';
-          return next;
-        });
-
-        pointer = (pointer + 1) % rotatableIndices.length;
-        // Si completó una ronda, pausa larga; si no, stagger corto
-        const nextDelay = pointer === 0 ? ROTATION_INTERVAL : STAGGER_DELAY;
-        timer = setTimeout(tick, nextDelay);
-      }, HOLD_MS);
+      if (pointer >= currentOrder.length) {
+        pointer = 0;
+        patternIdx += 1;
+        currentOrder = getCurrentOrder();
+        timer = setTimeout(tick, ROTATION_INTERVAL);
+      } else {
+        timer = setTimeout(tick, STAGGER_DELAY);
+      }
     };
 
     timer = setTimeout(tick, ROTATION_INTERVAL);
@@ -221,7 +232,6 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
                 activeIndex={activeIndices[slotIdx] ?? 0}
                 slotIndex={slotIdx}
                 slotTick={slotTicks[slotIdx] ?? 0}
-                slotPhase={slotPhases[slotIdx] ?? 'idle'}
                 fullWidth={isSingleSlot}
                 onPrev={() => {
                   setActiveIndices((prev) => {
@@ -258,13 +268,17 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
   );
 }
 
-/* ═══════════════════════ COVER SLOT ══════════════════════════ */
+/* ═══════════════════════ COVER SLOT (double-buffered Ken Burns) ═══ */
+interface LayerState {
+  imgIndex: number;
+  tick: number;
+}
+
 function CoverSlot({
   slot,
   activeIndex,
   slotIndex,
   slotTick,
-  slotPhase,
   fullWidth,
   onPrev,
   onNext,
@@ -273,7 +287,6 @@ function CoverSlot({
   activeIndex: number;
   slotIndex: number;
   slotTick: number;
-  slotPhase: SlotPhase;
   fullWidth?: boolean;
   onPrev: () => void;
   onNext: () => void;
@@ -283,23 +296,68 @@ function CoverSlot({
   if (!activeProject) return null;
   const hasMultiple = slot.projects.length > 1;
 
-  const [prevIndex, setPrevIndex] = useState<number | null>(null);
-  const [animKey, setAnimKey] = useState(0);
-  const prevActiveRef = useRef(safeIndex);
+  const [layerA, setLayerA] = useState<LayerState>({ imgIndex: safeIndex, tick: 0 });
+  const [layerB, setLayerB] = useState<LayerState>({ imgIndex: safeIndex, tick: 0 });
+  const [front, setFront] = useState<'A' | 'B'>('A');
+  const frontRef = useRef<'A' | 'B'>('A');
+  const prevSafeRef = useRef(safeIndex);
 
   useEffect(() => injectKeyframes(), []);
 
-  /* Detectar cambio de imagen y guardar la anterior */
   useEffect(() => {
-    if (safeIndex !== prevActiveRef.current) {
-      setPrevIndex(prevActiveRef.current);
-      setAnimKey((k) => k + 1);
-      prevActiveRef.current = safeIndex;
+    if (safeIndex !== prevSafeRef.current) {
+      prevSafeRef.current = safeIndex;
 
-      const t = setTimeout(() => setPrevIndex(null), TRANSITION_MS);
-      return () => clearTimeout(t);
+      if (frontRef.current === 'A') {
+        setLayerB((prev) => ({ imgIndex: safeIndex, tick: prev.tick + 1 }));
+        setFront('B');
+        frontRef.current = 'B';
+      } else {
+        setLayerA((prev) => ({ imgIndex: safeIndex, tick: prev.tick + 1 }));
+        setFront('A');
+        frontRef.current = 'A';
+      }
     }
   }, [safeIndex]);
+
+  const getKbVariant = (tick: number) => (tick + slotIndex) % KB_VARIANT_COUNT;
+
+  const sizeStr = fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`;
+
+  const renderLayer = (layer: LayerState, isFront: boolean) => {
+    const project = slot.projects[layer.imgIndex];
+    if (!project) return null;
+
+    return (
+      <div
+        className="absolute inset-0"
+        style={{
+          opacity: isFront ? 1 : 0,
+          transition: `opacity ${CROSSFADE_MS}ms ease-in-out`,
+          zIndex: isFront ? 2 : 1,
+        }}
+      >
+        <div
+          key={`kb-${layer.tick}`}
+          className="absolute inset-0"
+          style={{
+            animation: `kb-v${getKbVariant(layer.tick)} ${KB_DURATION_MS}ms ease-out both`,
+            willChange: 'transform',
+          }}
+        >
+          <Image
+            src={getStrapiImageUrl(project.foto_portada)}
+            alt={project.titulo}
+            fill
+            className="object-cover"
+            sizes={sizeStr}
+            quality={100}
+            priority={slotIndex < 3 || fullWidth}
+          />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Link
@@ -310,46 +368,10 @@ function CoverSlot({
       style={{ cursor: 'pointer', maxWidth: fullWidth ? undefined : `${SLOT_W}px` }}
     >
       <div className="group/cover absolute inset-0 z-0 overflow-hidden cursor-pointer">
-        {/* Imagen anterior — se queda estática debajo */}
-        {prevIndex !== null && (
-          <div
-            key={`bg-${animKey}`}
-            className="absolute inset-0"
-            style={{ zIndex: 1 }}
-          >
-            <Image
-              src={getStrapiImageUrl(slot.projects[prevIndex].foto_portada)}
-              alt={slot.projects[prevIndex].titulo}
-              fill
-              className="object-cover"
-              sizes={fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`}
-              quality={100}
-            />
-          </div>
-        )}
-
-        {/* Imagen nueva — fade-in suave encima */}
-        <div
-          key={`enter-${animKey}`}
-          className="absolute inset-0"
-          style={{
-            animation:
-              animKey > 0
-                ? `slot-enter ${TRANSITION_MS}ms ease-out forwards`
-                : undefined,
-            zIndex: 2,
-          }}
-        >
-          <Image
-            src={getStrapiImageUrl(activeProject.foto_portada)}
-            alt={activeProject.titulo}
-            fill
-            className="object-cover"
-            sizes={fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`}
-            quality={100}
-            priority={slotIndex < 3 || fullWidth}
-          />
-        </div>
+        {/* Layer A */}
+        {renderLayer(layerA, front === 'A')}
+        {/* Layer B */}
+        {renderLayer(layerB, front === 'B')}
 
         {/* Overlay sutil editorial */}
         <div

@@ -265,14 +265,14 @@ export default function ProyectoDetailView({ proyecto }: Props) {
       {/* Session info bar */}
       <div className="fixed z-10 left-0 right-0 top-1/2 -translate-y-1/2 flex flex-col items-end pointer-events-none px-4 md:items-stretch md:px-10 md:grid md:grid-cols-[1fr_2fr_1fr] md:gap-10">
         <div className="flex items-center self-start md:self-auto">
-          <h1 className="font-ibm-mono text-xl md:text-4xl font-bold leading-tight text-red-500 tracking-[-0.085em]">
+          <h1 className="font-ibm-mono text-xl font-bold leading-tight text-red-500 tracking-[-0.085em]">
             {proyecto.titulo}
           </h1>
         </div>
 
         <div className="flex items-center">
           {proyecto.descripcion && (
-            <p className="font-ibm-mono text-[clamp(0.75rem,1.2vw,16px)] font-bold text-red-500 tracking-[-0.05em]">
+            <p className="font-ibm-mono text-lg font-regular text-red-500 tracking-[-0.05em]">
               {proyecto.descripcion}
             </p>
           )}

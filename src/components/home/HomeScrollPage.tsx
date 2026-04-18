@@ -38,7 +38,7 @@ export default function HomeScrollPage({ data }: Props) {
           alignItems: 'flex-start',
           gap: `${SECTION_GAP}px`,
           paddingTop: `${SECTION_GAP}px`,
-          paddingBottom: '120px',
+          paddingBottom: '20px',
           paddingLeft: '1.5rem',
           paddingRight: '1.5rem',
         }}
@@ -82,6 +82,13 @@ export default function HomeScrollPage({ data }: Props) {
         {data.bottom_hero_image && (
           <HomeBottomHero image={data.bottom_hero_image} />
         )}
+
+        {/* Copyright */}
+        <div className="w-full px-4 pb-28 pt-2 text-right md:px-0" style={{ maxWidth: '1436px', marginTop: '-80px' }}>
+          <span className="font-ibm-mono text-sm font-semibold leading-none tracking-[-0.07em] text-red-500">
+            © {new Date().getFullYear()} Bryan Torres
+          </span>
+        </div>
       </div>
     </div>
   );
