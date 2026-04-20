@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { getGlobalConfig } from '@/lib/api';
+import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 
 // Tipografía IBM Plex Sans según el diseño
 const ibmPlexSans = IBM_Plex_Sans({
@@ -14,10 +15,15 @@ const ibmPlexSans = IBM_Plex_Sans({
 
 export async function generateMetadata(): Promise<Metadata> {
   const global = await getGlobalConfig();
-  
+
+  const faviconUrl = global?.favicon ? getStrapiImageUrl(global.favicon) : '/favicon.ico';
+
   return {
-    title: global?.siteName || 'Bryan Torres',
-    description: global?.siteDescription || 'Professional Photography Portfolio',
+    title: 'Bryan Torres',
+    description: 'Professional Photography Portfolio',
+    icons: {
+      icon: faviconUrl,
+    },
   };
 }
 
