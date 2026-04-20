@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { StrapiMedia } from '@/models';
 import StrapiMediaRenderer from '@/components/ui/StrapiMediaRenderer';
+import GlassChevron from '@/components/ui/GlassChevron';
 
 interface Props {
   images: StrapiMedia | StrapiMedia[];
@@ -83,20 +84,11 @@ export default function ImageCarousel({
             type="button"
             onClick={prev}
             aria-label="Imagen anterior"
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 text-white transition-all duration-300 cursor-pointer"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center pointer-events-auto"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
+            <div className="relative w-12 h-12">
+              <GlassChevron direction="left" />
+            </div>
           </button>
 
           {/* Right arrow */}
@@ -104,20 +96,11 @@ export default function ImageCarousel({
             type="button"
             onClick={next}
             aria-label="Siguiente imagen"
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 text-white transition-all duration-300 cursor-pointer"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center pointer-events-auto"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M9 18l6-6-6-6" />
-            </svg>
+            <div className="relative w-12 h-12">
+              <GlassChevron direction="right" />
+            </div>
           </button>
         </>
       )}
