@@ -196,12 +196,12 @@ export default function ProyectoDetailView({ proyecto }: Props) {
       </div>
 
       {/* Images + Thumbnails grid */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_minmax(0,2fr)_1fr] gap-2 md:gap-10 px-4 md:px-10 py-4 md:py-20 overflow-visible max-w-[1800px] mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr_1fr] gap-2 md:gap-10 px-4 md:px-10 py-4 md:py-20 overflow-visible">
         {/* Column 1 */}
         <div className="hidden md:block" />
 
         {/* Column 2: Images */}
-        <div className="flex flex-col items-start gap-2 md:max-w-[550px] min-[1440px]:max-w-none md:mx-auto">
+        <div className="flex flex-col items-start gap-2">
           {todasLasFotos.map((foto, index) => (
             <div
               key={foto.id}
