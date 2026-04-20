@@ -1,13 +1,12 @@
 // src/app/page.tsx
-import HomeScrollPage from '@/components/home/HomeScrollPage';
-import HomeRotatingSlots from '@/components/home/HomeRotatingSlots';
+import HomeContent from '@/components/home/HomeContent';
 import NavFooter from '@/components/layout/NavFooter';
 import Logo3D from '@/components/ui/Logo3D';
 import { getHomePage, getProjects } from '@/lib/api';
 
 /**
- * Home page — first screen is the original rotating slots (100vh),
- * then scrolling down reveals the new editorial sections from Strapi.
+ * Home page — rotating slots + editorial sections in a unified container
+ * that shares the same width constraint.
  */
 export default async function HomePage() {
   const [homeData, proyectos] = await Promise.all([
@@ -17,11 +16,7 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* First screen: rotating slots carousel (100vh) */}
-      <HomeRotatingSlots proyectos={proyectos} />
-
-      {/* Below: new editorial sections (scroll to reveal) */}
-      {homeData && <HomeScrollPage data={homeData} />}
+      <HomeContent homeData={homeData} proyectos={proyectos} />
 
       {/* Por encima del hero (z-5) para que el logo 3D sea visible; footer encima de todo */}
       <Logo3D />

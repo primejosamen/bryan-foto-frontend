@@ -24,8 +24,7 @@ interface Props {
 export default function HomeCenteredImage({ image }: Props) {
   return (
     <section
-      className="w-full px-4 md:px-0"
-      style={{ maxWidth: `${TOTAL_W}px` }}
+      className="w-full"
     >
       <ScrollReveal>
         <div

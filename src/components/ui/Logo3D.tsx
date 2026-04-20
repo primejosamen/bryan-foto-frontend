@@ -141,7 +141,13 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
     const rawWidth = rawBox.max.x - rawBox.min.x;
 
     // Escalar para que el logo llene un % del ancho visible (responsive)
-    const TARGET_FILL = isMobile ? 0.65 : size.width < 1024 ? 0.60 : 0.70;
+    const TARGET_FILL = isMobile
+      ? 0.65
+      : size.width >= 2200
+        ? 0.85   // pantallas muy grandes: logo grande y centrado
+        : size.width < 1024
+          ? 0.60
+          : 0.70;
     const s = (visibleWidth * TARGET_FILL) / Math.max(rawWidth, 0.01);
 
     // Centrar el logo en el frustum visible
@@ -278,16 +284,35 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
     const shift = shiftFraction * 2 * halfH;
 
     // ── Horizontal shift: center logo in the white space to the right of content ──
-    const CONTENT_MAX_W = 1436;  // HomeHeroGrid maxWidth
-    const PAD = 24;              // 1.5rem padding each side
-    const contentW = Math.min(CONTENT_MAX_W, size.width - PAD * 2);
-    const whiteSpaceW = size.width - PAD * 2 - contentW;
+    const CONTENT_MAX_W = 1436; // legacy: HomeHeroGrid maxWidth
+    const PAD = 24; // 1.5rem padding each side
+    const rightReserveCss = (() => {
+      if (typeof window === 'undefined') return 0;
+      const raw = getComputedStyle(document.documentElement).getPropertyValue('--home-right-reserve');
+      const n = Number.parseFloat(raw);
+      return Number.isFinite(n) ? n : 0;
+    })();
+
+    const available = Math.max(0, size.width - PAD * 2);
+    const contentW =
+      !isMobile && rightReserveCss > 0
+        ? Math.max(0, available - rightReserveCss)
+        : Math.min(CONTENT_MAX_W, available);
+    const whiteSpaceW =
+      !isMobile && rightReserveCss > 0
+        ? Math.max(0, rightReserveCss)
+        : Math.max(0, available - contentW);
     let hShift = 0;
     if (!isMobile && whiteSpaceW > 40) {
       // Center of the white gap as a fraction of viewport (0 = left, 1 = right)
-      const whiteCenter = (PAD + contentW + size.width - PAD) / 2;
+      const whiteCenter =
+        !isMobile && rightReserveCss > 0
+          ? PAD + contentW + whiteSpaceW / 2
+          : (PAD + contentW + size.width - PAD) / 2;
       const shift01 = Math.min((whiteCenter / size.width - 0.5) * 2, 1.0);
-      hShift = -sp * halfW * shift01;
+      // En pantallas muy grandes, reducir el desplazamiento para mantener centrado
+      const shiftScale = size.width >= 2200 ? 0.85 : 1.0;
+      hShift = -sp * halfW * shift01 * shiftScale;
     } else if (isMobile) {
       hShift = sp * halfW * -0.20;
     }

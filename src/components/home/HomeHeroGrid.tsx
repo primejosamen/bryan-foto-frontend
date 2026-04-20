@@ -27,8 +27,7 @@ export default function HomeHeroGrid({ image1, image2, image3 }: Props) {
 
   return (
     <section
-      className="w-full flex flex-col gap-2 px-4 md:px-0 md:flex-row md:gap-2.5"
-      style={{ maxWidth: `${TOTAL_W}px` }}
+      className="w-full flex flex-col gap-2.5 md:flex-row md:gap-2.5"
     >
       {images.map((img, i) => (
         <ScrollReveal key={i} delay={i * 150} className="md:flex-1 md:basis-0 md:min-w-0">
@@ -40,7 +39,7 @@ export default function HomeHeroGrid({ image1, image2, image3 }: Props) {
               media={img}
               alt={`Hero ${i + 1}`}
               className=""
-              sizes="(max-width: 768px) 100vw, 472px"
+              sizes="(max-width: 800px) 100vw, 472px"
             />
           </div>
         </ScrollReveal>

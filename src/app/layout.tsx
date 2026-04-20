@@ -30,7 +30,7 @@ export default async function RootLayout({
 
   return (
     <html lang="es" className={ibmPlexSans.variable}>
-      <body className="bg-black text-white antialiased">
+      <body className="bg-white text-white antialiased">
         <main>{children}</main>
       </body>
     </html>

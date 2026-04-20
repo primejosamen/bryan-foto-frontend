@@ -15,6 +15,15 @@ const HEADER_H = 170;
 const HEADER_H_MOBILE = 120;
 const MOBILE_MAX = 767;
 
+/* Desktop: reservamos canvas a la derecha para el logo */
+const DESKTOP_RIGHT_RESERVE_MIN = 240;
+const DESKTOP_RIGHT_RESERVE_MAX = 820;
+const DESKTOP_RIGHT_RESERVE_VW = 0.3; // ~30vw como en otras secciones
+const DESKTOP_SIDE_PADDING_PX = 48; // md:px-6 (24px por lado)
+const DESKTOP_SLOT_W_MIN = 160;
+const WIDE_SCREEN_BP = 2000;
+const WIDE_SCREEN_EXTRA_RIGHT_RESERVE = 80;
+
 /* Timing base */
 const ROTATION_INTERVAL = 3000;
 const STAGGER_DELAY = 800;
@@ -79,13 +88,48 @@ interface Props {
 /* ═══════════════════════ COMPONENTE PRINCIPAL ═════════════════ */
 export default function HomeRotatingSlots({ proyectos }: Props) {
   const [slotCount, setSlotCount] = useState<1 | 3>(3);
+  const [desktopSlotW, setDesktopSlotW] = useState(SLOT_W);
 
   useLayoutEffect(() => {
     const mq = window.matchMedia(`(max-width: ${MOBILE_MAX}px)`);
-    const apply = () => setSlotCount(mq.matches ? 1 : SLOT_COUNT_DESKTOP);
+    const apply = () => {
+      const isMobile = mq.matches;
+      setSlotCount(isMobile ? 1 : SLOT_COUNT_DESKTOP);
+
+      if (!isMobile) {
+        const vw = window.innerWidth;
+        const extra = vw >= WIDE_SCREEN_BP ? WIDE_SCREEN_EXTRA_RIGHT_RESERVE : 0;
+        const rightReserve = Math.min(
+          DESKTOP_RIGHT_RESERVE_MAX,
+          Math.max(
+            DESKTOP_RIGHT_RESERVE_MIN,
+            Math.round(vw * DESKTOP_RIGHT_RESERVE_VW) + extra
+          )
+        );
+
+        // Compartimos con Logo3D para ubicar el logo en el "aire" de la derecha
+        document.documentElement.style.setProperty('--home-right-reserve', `${rightReserve}px`);
+
+        const availableLeft = Math.max(0, vw - DESKTOP_SIDE_PADDING_PX - rightReserve);
+        const computed = Math.floor(
+          (availableLeft - (SLOT_COUNT_DESKTOP - 1) * SLOT_GAP) / SLOT_COUNT_DESKTOP
+        );
+
+        const nextW = Math.min(SLOT_W, Math.max(DESKTOP_SLOT_W_MIN, computed || DESKTOP_SLOT_W_MIN));
+        setDesktopSlotW(nextW);
+      } else {
+        document.documentElement.style.removeProperty('--home-right-reserve');
+        setDesktopSlotW(SLOT_W);
+      }
+    };
     apply();
     mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
+    window.addEventListener('resize', apply);
+    return () => {
+      mq.removeEventListener('change', apply);
+      window.removeEventListener('resize', apply);
+      document.documentElement.style.removeProperty('--home-right-reserve');
+    };
   }, []);
 
   const proyectosVisibles = useMemo(() => {
@@ -198,7 +242,8 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
   }
 
   const headerH = slotCount === 1 ? HEADER_H_MOBILE : HEADER_H;
-  const slotsBlockWidthPx = slotCount * SLOT_W + (slotCount - 1) * SLOT_GAP;
+  const slotW = slotCount === 1 ? SLOT_W : desktopSlotW;
+  const slotsBlockWidthPx = slotCount * slotW + (slotCount - 1) * SLOT_GAP;
   const isSingleSlot = slotCount === 1;
 
   return (
@@ -213,14 +258,16 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
 
         {/* MAIN — márgenes laterales consistentes */}
         <div
-          className="relative z-5 px-4 md:px-6"
+          className={`relative z-5 px-4 md:px-6 min-w-0 overflow-hidden`}
           style={{ height: `calc(100vh - ${headerH}px)` }}
         >
           <div
-            className={`flex h-full ${isSingleSlot ? 'w-full max-w-full' : 'w-full'}`}
+            className={`flex h-full ${isSingleSlot ? 'w-full max-w-full' : 'shrink-0'}`}
             style={{
               gap: `${SLOT_GAP}px`,
-              maxWidth: isSingleSlot ? '100%' : `${slotsBlockWidthPx}px`,
+              ...(isSingleSlot
+                ? { width: '100%', maxWidth: '100%' }
+                : {}),
             }}
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
@@ -233,6 +280,7 @@ export default function HomeRotatingSlots({ proyectos }: Props) {
                 slotIndex={slotIdx}
                 slotTick={slotTicks[slotIdx] ?? 0}
                 fullWidth={isSingleSlot}
+                slotW={slotW}
                 onPrev={() => {
                   setActiveIndices((prev) => {
                     const next = [...prev];
@@ -280,6 +328,7 @@ function CoverSlot({
   slotIndex,
   slotTick,
   fullWidth,
+  slotW,
   onPrev,
   onNext,
 }: {
@@ -288,6 +337,7 @@ function CoverSlot({
   slotIndex: number;
   slotTick: number;
   fullWidth?: boolean;
+  slotW: number;
   onPrev: () => void;
   onNext: () => void;
 }) {
@@ -322,7 +372,10 @@ function CoverSlot({
 
   const getKbVariant = (tick: number) => (tick + slotIndex) % KB_VARIANT_COUNT;
 
-  const sizeStr = fullWidth ? '(max-width: 767px) 100vw, 90vw' : `${SLOT_W}px`;
+  /* Móvil: ancho pantalla; escritorio: ancho fijo del diseño (evita pedir src enorme en monitores anchos) */
+  const sizeStr = fullWidth
+    ? `(max-width: ${MOBILE_MAX}px) 100vw, min(100vw, ${SLOT_W}px)`
+    : `${slotW}px`;
 
   const renderLayer = (layer: LayerState, isFront: boolean) => {
     const project = slot.projects[layer.imgIndex];
@@ -363,9 +416,12 @@ function CoverSlot({
     <Link
       href={`/proyecto/${activeProject.slug}`}
       className={`relative z-10 block h-full overflow-visible cursor-pointer ${
-        fullWidth ? 'min-w-0 flex-1 shrink' : 'flex-1 min-w-0 shrink'
+        fullWidth ? 'min-w-0 w-full flex-1 shrink' : 'flex-1 min-w-0'
       }`}
-      style={{ cursor: 'pointer', maxWidth: fullWidth ? undefined : `${SLOT_W}px` }}
+      style={{
+        cursor: 'pointer',
+        ...(fullWidth ? {} : { maxWidth: slotW }),
+      }}
     >
       <div className="group/cover absolute inset-0 z-0 overflow-hidden cursor-pointer">
         {/* Layer A */}

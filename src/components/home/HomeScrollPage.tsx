@@ -32,15 +32,14 @@ export default function HomeScrollPage({ data }: Props) {
     >
       {/* Contenedor que agrupa todas las secciones nuevas */}
       <div
+        className="px-4 md:px-6 w-full md:max-w-[1484px]"
         style={{
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'flex-start',
+          alignItems: 'stretch',
           gap: `${SECTION_GAP}px`,
           paddingTop: `${SECTION_GAP}px`,
           paddingBottom: '20px',
-          paddingLeft: '1.5rem',
-          paddingRight: '1.5rem',
         }}
       >
         {/* Sección 1: Hero Grid — 3 fotos individuales */}
@@ -84,7 +83,12 @@ export default function HomeScrollPage({ data }: Props) {
         )}
 
         {/* Copyright */}
-        <div className="w-full px-4 pb-28 pt-2 text-right md:px-0" style={{ maxWidth: '1436px', marginTop: '-80px' }}>
+        <div
+          className="w-full pb-28 pt-2 text-right"
+          style={{
+            marginTop: '-80px',
+          }}
+        >
           <span className="font-ibm-mono text-sm font-semibold leading-none tracking-[-0.07em] text-red-500">
             © {new Date().getFullYear()} Bryan Torres
           </span>

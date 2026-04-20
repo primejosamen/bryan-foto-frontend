@@ -38,8 +38,7 @@ export default function HomeEditorialGift({ text, media }: Props) {
 
   return (
     <section
-      className="w-full flex flex-col gap-6 px-4 md:px-0 md:flex-row md:gap-0 md:items-start"
-      style={{ maxWidth: `${TOTAL_W}px` }}
+      className="w-full flex flex-col gap-6 md:flex-row md:gap-0 md:items-start"
     >
       {/* Col 1: Texto editorial */}
       <ScrollReveal delay={0} className="md:flex-1 md:basis-0 md:min-w-0">
