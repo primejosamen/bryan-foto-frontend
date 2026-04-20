@@ -90,7 +90,11 @@ export default function HomeScrollPage({ data }: Props) {
           }}
         >
           <span className="font-ibm-mono text-sm font-semibold leading-none tracking-[-0.07em] text-red-500">
-            © {new Date().getFullYear()} Bryan Torres
+            © {new Date().getFullYear()} All rights reserved.
+          </span>
+          <br />
+          <span className="font-ibm-mono text-xs font-normal leading-snug tracking-[-0.05em] text-red-500/70">
+            No part of this website, including photographs and images, may be reproduced, stored, or transmitted in any form or by any means, electronic, mechanical, photocopying, recording, or otherwise, without prior written permission.
           </span>
         </div>
       </div>

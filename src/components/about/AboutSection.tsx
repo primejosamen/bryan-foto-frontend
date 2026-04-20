@@ -44,7 +44,7 @@ export default function AboutSection({ about, contacto }: AboutSectionProps) {
 
   const contactItems = contacto
     ? [
-        { key: 'phone', label: 'Phone', value: contacto.telefono, href: contacto.telefono ? `tel:${contacto.telefono}` : null },
+        { key: 'phone', label: 'Phone', value: contacto.telefono, href: contacto.telefono ? `https://wa.me/${contacto.telefono.replace(/[^0-9]/g, '')}` : null },
         { key: 'email', label: 'Email', value: contacto.email, href: contacto.email ? `mailto:${contacto.email}` : null },
         { key: 'instagram', label: 'Instagram', value: contacto.instagram, href: contacto.instagram ? `https://instagram.com/${contacto.instagram.replace('@', '')}` : null },
         { key: 'location', label: 'Location', value: contacto.ubicacion, href: null },
@@ -158,8 +158,8 @@ export default function AboutSection({ about, contacto }: AboutSectionProps) {
                   {item.href ? (
                     <a
                       href={item.href}
-                      target={item.key === 'instagram' ? '_blank' : undefined}
-                      rel={item.key === 'instagram' ? 'noopener noreferrer' : undefined}
+                      target={item.key === 'instagram' || item.key === 'phone' ? '_blank' : undefined}
+                      rel={item.key === 'instagram' || item.key === 'phone' ? 'noopener noreferrer' : undefined}
                       className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-snug font-normal text-red-500 no-underline"
                     >
                       {item.value}
