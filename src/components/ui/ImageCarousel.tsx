@@ -86,7 +86,7 @@ export default function ImageCarousel({
             aria-label="Imagen anterior"
             className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center pointer-events-auto"
           >
-            <div className="relative w-12 h-12">
+            <div className="relative w-9 h-9">
               <GlassChevron direction="left" />
             </div>
           </button>
@@ -98,7 +98,7 @@ export default function ImageCarousel({
             aria-label="Siguiente imagen"
             className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center pointer-events-auto"
           >
-            <div className="relative w-12 h-12">
+            <div className="relative w-9 h-9">
               <GlassChevron direction="right" />
             </div>
           </button>
