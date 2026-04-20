@@ -40,22 +40,14 @@ select,
   cursor: text;
 }
 
-/* Scrollbar personalizada */
+/* Ocultar scrollbar manteniendo scroll funcional */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 0px;
+  display: none;
 }
 
-::-webkit-scrollbar-track {
-  background: #111111;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #333333;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555555;
+html {
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Selección de texto */

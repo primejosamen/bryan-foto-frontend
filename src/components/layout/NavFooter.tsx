@@ -99,8 +99,8 @@ export default function NavFooter() {
   }, []);
 
   return (
-    <nav className="fixed inset-x-0 bottom-3 z-9999 pointer-events-none flex justify-center px-6 md:justify-end md:pr-8">
-      <div ref={containerRef} className="pointer-events-auto relative flex h-12 items-center gap-2 px-1 md:gap-4">
+    <nav className="fixed inset-x-0 bottom-3 z-[9999] pointer-events-none flex justify-center px-6 md:justify-end md:pr-8">
+      <div ref={containerRef} className="pointer-events-auto relative flex h-9 items-center gap-1.5 px-1 md:gap-3">
 
         {/* Traveling glass */}
         <motion.div
@@ -123,7 +123,7 @@ export default function NavFooter() {
             key={link.href}
             href={link.href}
             ref={(el) => { linkRefs.current[link.href] = el; }}
-            className="relative inline-flex items-center font-ibm-mono text-[1.1rem] font-semibold leading-none md:text-[1.4rem] tracking-[-0.07em] px-3 py-2"
+            className="relative inline-flex items-center font-ibm-mono text-[0.85rem] font-semibold leading-none md:text-[1.05rem] tracking-[-0.07em] px-2 py-1.5"
             onMouseEnter={() => onEnter(link.href)}
             onMouseLeave={onLeave}
             onTouchStart={() => handleTouch(link.href)}
@@ -133,7 +133,7 @@ export default function NavFooter() {
         ))}
 
         {/* Invisible center spacer — rest position */}
-        <div ref={centerRef} className="mx-1 h-10 w-10 shrink-0" />
+        <div ref={centerRef} className="mx-0.5 h-7 w-7 shrink-0" />
 
         {/* Right links (external) */}
         {NAV_LINKS.filter((l) => l.external).map((link) => (
@@ -143,7 +143,7 @@ export default function NavFooter() {
             target="_blank"
             rel="noopener noreferrer"
             ref={(el) => { linkRefs.current[link.href] = el; }}
-            className="relative inline-flex items-center font-ibm-mono text-[1.1rem] font-semibold leading-none md:text-[1.4rem] tracking-[-0.07em] px-3 py-2"
+            className="relative inline-flex items-center font-ibm-mono text-[0.85rem] font-semibold leading-none md:text-[1.05rem] tracking-[-0.07em] px-2 py-1.5"
             onMouseEnter={() => onEnter(link.href)}
             onMouseLeave={onLeave}
             onTouchStart={() => handleTouch(link.href)}

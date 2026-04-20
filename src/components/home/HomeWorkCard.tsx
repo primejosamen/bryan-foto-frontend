@@ -12,18 +12,16 @@ export default function HomeWorkCard({
   proyecto: Project;
   priority?: boolean;
 }) {
-  // ✅ Marco fijo según el diseño del cliente
-  const FRAME_W = 472;
-  const FRAME_H = 810;
-
+  // Marco fluido: escala proporcionalmente al viewport
+  // 1920px → 472px, 1440px → 354px, 1280px → 315px, 1024px → 252px
   return (
     <Link href={`/proyecto/${proyecto.slug}`} className="block">
       <article
-        className="relative flex-shrink-0"
+        className="relative shrink-0"
         style={{
-          width: `${FRAME_W}px`,
-          height: `${FRAME_H}px`,
-          zIndex: 10, // ✅ Por encima del Canvas del logo (z-index: 2)
+          width: 'clamp(240px, 24.6vw, 472px)',
+          height: 'clamp(412px, 42.2vw, 810px)',
+          zIndex: 10,
           position: 'relative',
         }}
       >
@@ -33,7 +31,7 @@ export default function HomeWorkCard({
             alt={proyecto.titulo}
             fill
             className="object-cover"
-            sizes="472px"
+            sizes="(min-width: 1440px) 472px, (min-width: 1024px) 380px, 320px"
             priority={priority}
           />
         </div>

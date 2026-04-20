@@ -25,8 +25,7 @@ interface Props {
 export default function HomeAboutPreview({ image, text }: Props) {
   return (
     <section
-      className="w-full flex flex-col gap-6 px-4 md:px-0 md:flex-row md:gap-0 md:items-start"
-      style={{ maxWidth: `${TOTAL_W}px` }}
+      className="w-full flex flex-col gap-6 md:flex-row md:gap-0 md:items-start"
     >
       {/* Col 1: Imagen */}
       <ScrollReveal delay={0} className="md:flex-1 md:basis-0 md:min-w-0">
@@ -56,7 +55,6 @@ export default function HomeAboutPreview({ image, text }: Props) {
             lineHeight: 1.35,
             letterSpacing: '-0.05em',
             color: '#ff0000',
-            paddingTop: '60px',
           }}
         >
           {renderBlocks(text)}

@@ -118,16 +118,16 @@ export default function HomeStickyWork({ proyectos }: Props) {
 
         {/* MAIN - Contenedor de imágenes */}
         <div 
-          className="relative px-12 pb-10" 
+          className="relative px-4 lg:px-12 pb-10" 
           style={{ 
             height: 'calc(100vh - 270px)',
             zIndex: 5,
             position: 'relative',
           }}
         >
-          <div className="h-full flex gap-12">
+          <div className="h-full flex gap-6 lg:gap-12">
             {/* IZQUIERDA - Galería de imágenes */}
-            <div ref={viewportRef} className="relative flex-1 overflow-hidden">
+            <div ref={viewportRef} className="relative overflow-hidden" style={{ width: 'calc(100% - clamp(180px, 30vw, 560px))' }}>
               <motion.div
                 ref={trackRef}
                 className="absolute left-0 top-1/2 -translate-y-1/2 flex gap-[10px]"
@@ -140,8 +140,8 @@ export default function HomeStickyWork({ proyectos }: Props) {
               </motion.div>
             </div>
 
-            {/* DERECHA (aire blanco) */}
-            <aside className="relative hidden lg:block w-[38vw] max-w-[560px] min-w-[360px] bg-white" />
+            {/* DERECHA (aire blanco — Logo 3D vive aquí) */}
+            <aside className="relative shrink-0 bg-white" style={{ width: 'clamp(180px, 30vw, 720px)' }} />
           </div>
         </div>
       </div>

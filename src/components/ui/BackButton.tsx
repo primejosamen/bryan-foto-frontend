@@ -63,7 +63,7 @@ export default function BackButton() {
   return (
     <div
       ref={containerRef}
-      className="fixed top-4 left-4 z-9999 md:top-8 md:left-8 pointer-events-auto"
+      className="fixed top-4 left-4 z-[9999] md:top-8 md:left-8 pointer-events-auto"
     >
       <div className="relative flex items-center gap-0">
         {/* Traveling glass */}
