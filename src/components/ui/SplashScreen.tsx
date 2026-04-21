@@ -15,12 +15,23 @@ export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
   const [needsBlend, setNeedsBlend] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Detect if browser falls back to MP4 (no WebM alpha support → iOS Safari)
+  /**
+   * Safari (including iOS) cannot render alpha-channel in WebM even if it
+   * reports WebM support.  Detect Safari and force the opaque .mp4 with
+   * mix-blend-mode: screen so the black background disappears against white.
+   */
   useEffect(() => {
-    const v = document.createElement('video');
-    const canWebm = v.canPlayType('video/webm; codecs="vp8"') ||
-                     v.canPlayType('video/webm; codecs="vp9"');
-    if (!canWebm) setNeedsBlend(true);
+    const ua = navigator.userAgent;
+    const isSafari = /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|EdgiOS/i.test(ua);
+    if (isSafari) {
+      setNeedsBlend(true);
+      // Force MP4 source so Safari never picks the alpha-less WebM
+      const video = videoRef.current;
+      if (video) {
+        video.src = '/splash-logo.mp4';
+        video.load();
+      }
+    }
   }, []);
 
   // Ensure splash stays at least minDisplayMs
