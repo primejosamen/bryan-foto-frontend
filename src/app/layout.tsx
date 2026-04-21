@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: 'Bryan Torres',
-    description: 'Professional Photography Portfolio',
+    description: 'Fashion Photographer and Creative Director based in Europe',
     icons: {
       icon: faviconUrl,
     },

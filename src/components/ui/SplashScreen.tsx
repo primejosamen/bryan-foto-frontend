@@ -12,7 +12,7 @@ interface Props {
 export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
   const [minTimePassed, setMinTimePassed] = useState(false);
   const [visible, setVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Hide video on mobile — MP4 has no alpha and WebM alpha is broken on iOS
@@ -43,7 +43,7 @@ export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 9999,
+        zIndex: 10000,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -54,8 +54,8 @@ export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
         pointerEvents: shouldExit ? 'none' : 'auto',
       }}
     >
-      {/* Animated 3D logo — desktop only */}
-      {!isMobile && (
+      {/* Animated 3D logo — desktop only (hidden until we know the device) */}
+      {isMobile === false && (
         <video
           ref={videoRef}
           autoPlay
