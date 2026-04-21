@@ -12,7 +12,16 @@ interface Props {
 export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
   const [minTimePassed, setMinTimePassed] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [needsBlend, setNeedsBlend] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Detect if browser falls back to MP4 (no WebM alpha support → iOS Safari)
+  useEffect(() => {
+    const v = document.createElement('video');
+    const canWebm = v.canPlayType('video/webm; codecs="vp8"') ||
+                     v.canPlayType('video/webm; codecs="vp9"');
+    if (!canWebm) setNeedsBlend(true);
+  }, []);
 
   // Ensure splash stays at least minDisplayMs
   useEffect(() => {
@@ -61,6 +70,8 @@ export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
           opacity: shouldExit ? 0 : 1,
           transform: shouldExit ? 'scale(1.05)' : 'scale(1)',
           transition: 'opacity 0.5s ease-out, transform 0.5s ease-out',
+          /* On iOS Safari MP4 has black bg (no alpha) — screen blend removes it */
+          mixBlendMode: needsBlend ? 'screen' : undefined,
         }}
       >
         <source src="/splash-logo.webm" type="video/webm" />

@@ -75,6 +75,8 @@ function PhotoCard({
 export default function ProyectoDetailView({ proyecto }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxLoading, setLightboxLoading] = useState(false);
+  const isNavigatingRef = useRef(false);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const todasLasFotos = useMemo(
@@ -108,7 +110,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
     return () => observer.disconnect();
   }, [todasLasFotos.length]);
 
-  /* ── Lightweight preload around active image ── */
+  /* ── Lightweight preload around active image (gallery 1200 + lightbox 1800) ── */
   useEffect(() => {
     if (typeof window === 'undefined' || todasLasFotos.length === 0) return;
 
@@ -120,23 +122,46 @@ export default function ProyectoDetailView({ proyecto }: Props) {
     ].filter((i) => i >= 0 && i < todasLasFotos.length);
 
     candidates.forEach((i) => {
-      const img = new window.Image();
-      img.src = getOptimizedImageUrl(todasLasFotos[i], 1200);
+      const img1 = new window.Image();
+      img1.src = getOptimizedImageUrl(todasLasFotos[i], 1200);
+      // Also preload at lightbox resolution
+      const img2 = new window.Image();
+      img2.src = getOptimizedImageUrl(todasLasFotos[i], 1800);
     });
   }, [activeIndex, todasLasFotos]);
 
-  /* ── Lightbox navigation ── */
+  /* ── Lightbox navigation (debounced to prevent race conditions) ── */
   const goLightbox = useCallback(
     (dir: -1 | 1) => {
+      if (isNavigatingRef.current) return;
+      isNavigatingRef.current = true;
+
       setLightboxIndex((prev) => {
         if (prev === null) return null;
         const next = prev + dir;
         if (next < 0 || next >= todasLasFotos.length) return prev;
         return next;
       });
+
+      // Unlock after image has time to start loading
+      setTimeout(() => {
+        isNavigatingRef.current = false;
+      }, 280);
     },
     [todasLasFotos.length],
   );
+
+  /* ── Preload adjacent lightbox images when lightbox is open ── */
+  useEffect(() => {
+    if (lightboxIndex === null || typeof window === 'undefined') return;
+
+    [lightboxIndex - 1, lightboxIndex + 1]
+      .filter((i) => i >= 0 && i < todasLasFotos.length)
+      .forEach((i) => {
+        const img = new window.Image();
+        img.src = getOptimizedImageUrl(todasLasFotos[i], 1800);
+      });
+  }, [lightboxIndex, todasLasFotos]);
 
   /* ── Lock body scroll when lightbox is open ── */
   useEffect(() => {
@@ -314,7 +339,14 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                   }}
                 >
                   <div className="relative w-full h-full">
+                    {/* Spinner while image loads */}
+                    {lightboxLoading && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
+                      </div>
+                    )}
                     <Image
+                      key={lightboxIndex}
                       src={getOptimizedImageUrl(foto, 1800)}
                       alt={`${proyecto.titulo} — ${lightboxIndex + 1}`}
                       fill
@@ -322,6 +354,8 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                       sizes="96vw"
                       quality={95}
                       draggable={false}
+                      onLoadStart={() => setLightboxLoading(true)}
+                      onLoad={() => setLightboxLoading(false)}
                     />
                   </div>
 
