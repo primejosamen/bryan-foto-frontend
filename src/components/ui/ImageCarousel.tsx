@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { StrapiMedia } from '@/models';
 import StrapiMediaRenderer from '@/components/ui/StrapiMediaRenderer';
 import GlassChevron from '@/components/ui/GlassChevron';
@@ -44,27 +44,41 @@ export default function ImageCarousel({
     [images.length],
   );
 
+  /* Only mount active image + immediate neighbours for pre-warm */
+  const visibleIndices = useMemo(() => {
+    const set = new Set<number>();
+    set.add(idx);
+    if (hasMultiple) {
+      set.add((idx - 1 + images.length) % images.length);
+      set.add((idx + 1) % images.length);
+    }
+    return set;
+  }, [idx, images.length, hasMultiple]);
+
   return (
     <div className="relative w-full h-full">
-      {/* All images mounted — active one gets opacity 1, rest stay at 0 */}
-      {images.map((img, i) => (
-        <div
-          key={img.id ?? i}
-          className="absolute inset-0"
-          style={{
-            opacity: i === idx ? 1 : 0,
-            zIndex: i === idx ? 2 : 1,
-          }}
-        >
-          <StrapiMediaRenderer
-            media={img}
-            alt={`${alt} — ${i + 1}`}
-            className=""
-            sizes={sizes}
-            quality={quality}
-          />
-        </div>
-      ))}
+      {/* Only mount active + neighbours — active gets opacity 1 */}
+      {images.map((img, i) => {
+        if (!visibleIndices.has(i)) return null;
+        return (
+          <div
+            key={img.id ?? i}
+            className="absolute inset-0 transition-opacity duration-300"
+            style={{
+              opacity: i === idx ? 1 : 0,
+              zIndex: i === idx ? 2 : 1,
+            }}
+          >
+            <StrapiMediaRenderer
+              media={img}
+              alt={`${alt} — ${i + 1}`}
+              className=""
+              sizes={sizes}
+              quality={quality}
+            />
+          </div>
+        );
+      })}
 
       {hasMultiple && (
         <>
