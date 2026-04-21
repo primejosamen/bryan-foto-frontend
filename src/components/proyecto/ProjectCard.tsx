@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import type { Project } from '@/models';
-import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import { getOptimizedImageUrl } from '@/lib/helpers/image.helpers';
 
 interface ProjectCardProps {
   proyecto: Project;
@@ -13,7 +13,7 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ proyecto, index }: ProjectCardProps) {
-  const imageUrl = getStrapiImageUrl(proyecto.foto_portada);
+  const imageUrl = getOptimizedImageUrl(proyecto.foto_portada, 1000);
 
   const aspect = useMemo(() => {
     const w = proyecto.foto_portada?.width;

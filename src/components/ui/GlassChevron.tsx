@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useCubeTexture } from '@react-three/drei';
+import { useFrame, useThree } from '@react-three/fiber';
+import { View, useCubeTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
 import vertexShader from '@/shaders/test/vertex.glsl';
 import glassFragment from '@/shaders/case/case_glass_fragment.glsl';
+
+export { GlassChevronMesh };
 
 /* ──────────────────────────────────────────────────
    Build a chevron shape as an extruded + bevelled mesh
@@ -57,7 +59,7 @@ function buildChevronGeo(direction: 'left' | 'right') {
    same glass shader as Logo3D
    ────────────────────────────────────────────────── */
 function GlassChevronMesh({ direction }: { direction: 'left' | 'right' }) {
-  const { camera, scene, gl } = useThree();
+  const { camera, scene } = useThree();
 
   const envMap = useCubeTexture(
     ['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg'],
@@ -68,13 +70,6 @@ function GlassChevronMesh({ direction }: { direction: 'left' | 'right' }) {
     envMap.colorSpace = THREE.SRGBColorSpace;
     scene.environment = envMap;
   }, [envMap, scene]);
-
-  useEffect(() => {
-    gl.outputColorSpace = THREE.SRGBColorSpace;
-    gl.toneMapping = THREE.ACESFilmicToneMapping;
-    gl.toneMappingExposure = 1.35;
-    gl.setClearColor(0x000000, 0);
-  }, [gl]);
 
   const mat = useMemo(
     () => {
@@ -125,8 +120,8 @@ function GlassChevronMesh({ direction }: { direction: 'left' | 'right' }) {
 }
 
 /* ──────────────────────────────────────────────────
-   GlassChevron — R3F canvas rendering an extruded
-   3D glass chevron. Pass direction='left'|'right'.
+   GlassChevron — renders into the global SharedCanvas
+   via a <View> portal. No extra WebGL context needed.
    ────────────────────────────────────────────────── */
 export default function GlassChevron({
   className = '',
@@ -136,10 +131,8 @@ export default function GlassChevron({
   direction?: 'left' | 'right';
 }) {
   return (
-    <Canvas
+    <View
       className={className}
-      gl={{ alpha: true, antialias: true, premultipliedAlpha: false }}
-      camera={{ position: [0, 0, 3], fov: 40 }}
       style={{
         position: 'absolute',
         inset: 0,
@@ -149,6 +142,6 @@ export default function GlassChevron({
       }}
     >
       <GlassChevronMesh direction={direction} />
-    </Canvas>
+    </View>
   );
 }
