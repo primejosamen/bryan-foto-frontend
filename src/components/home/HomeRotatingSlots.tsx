@@ -25,11 +25,11 @@ const WIDE_SCREEN_BP = 2000;
 const WIDE_SCREEN_EXTRA_RIGHT_RESERVE = 80;
 
 /* Timing base */
-const ROTATION_INTERVAL = 3000;
-const STAGGER_DELAY = 800;
+const ROTATION_INTERVAL = 5000;
+const STAGGER_DELAY = 2000;
 
 /* Crossfade (CSS transition, no flash) */
-const CROSSFADE_MS = 600;
+const CROSSFADE_MS = 0;
 
 
 
@@ -346,24 +346,19 @@ function CoverSlot({
         className="absolute inset-0"
         style={{
           opacity: isFront ? 1 : 0,
-          transition: `opacity ${CROSSFADE_MS}ms ease-in-out`,
+          transition: CROSSFADE_MS > 0 ? `opacity ${CROSSFADE_MS}ms ease-in-out` : undefined,
           zIndex: isFront ? 2 : 1,
         }}
       >
-        {/* Only mount <Image> for the front layer; back layer stays as
-            an empty div so the CSS opacity transition has a target,
-            but we avoid decoding an invisible image. */}
-        {isFront && (
-          <Image
-            src={getOptimizedImageUrl(project.foto_portada, 800)}
-            alt={project.titulo}
-            fill
-            className="object-cover"
-            sizes={sizeStr}
-            quality={80}
-            priority={slotIndex < 3 || fullWidth}
-          />
-        )}
+        <Image
+          src={getOptimizedImageUrl(project.foto_portada, 800)}
+          alt={project.titulo}
+          fill
+          className="object-cover"
+          sizes={sizeStr}
+          quality={80}
+          priority={slotIndex < 3 || fullWidth}
+        />
       </div>
     );
   };
