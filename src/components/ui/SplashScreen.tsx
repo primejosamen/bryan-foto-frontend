@@ -12,26 +12,12 @@ interface Props {
 export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
   const [minTimePassed, setMinTimePassed] = useState(false);
   const [visible, setVisible] = useState(true);
-  const [needsBlend, setNeedsBlend] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  /**
-   * Safari (including iOS) cannot render alpha-channel in WebM even if it
-   * reports WebM support.  Detect Safari and force the opaque .mp4 with
-   * mix-blend-mode: screen so the black background disappears against white.
-   */
+  // Hide video on mobile — MP4 has no alpha and WebM alpha is broken on iOS
   useEffect(() => {
-    const ua = navigator.userAgent;
-    const isSafari = /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|EdgiOS/i.test(ua);
-    if (isSafari) {
-      setNeedsBlend(true);
-      // Force MP4 source so Safari never picks the alpha-less WebM
-      const video = videoRef.current;
-      if (video) {
-        video.src = '/splash-logo.mp4';
-        video.load();
-      }
-    }
+    setIsMobile(window.innerWidth < 768);
   }, []);
 
   // Ensure splash stays at least minDisplayMs
@@ -68,26 +54,26 @@ export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
         pointerEvents: shouldExit ? 'none' : 'auto',
       }}
     >
-      {/* Animated 3D logo */}
-      <video
-        ref={videoRef}
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{
-          width: 'min(60vw, 480px)',
-          height: 'auto',
-          opacity: shouldExit ? 0 : 1,
-          transform: shouldExit ? 'scale(1.05)' : 'scale(1)',
-          transition: 'opacity 0.5s ease-out, transform 0.5s ease-out',
-          /* On iOS Safari MP4 has black bg (no alpha) — screen blend removes it */
-          mixBlendMode: needsBlend ? 'screen' : undefined,
-        }}
-      >
-        <source src="/splash-logo.webm" type="video/webm" />
-        <source src="/splash-logo.mp4" type="video/mp4" />
-      </video>
+      {/* Animated 3D logo — desktop only */}
+      {!isMobile && (
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            width: 'min(60vw, 480px)',
+            height: 'auto',
+            opacity: shouldExit ? 0 : 1,
+            transform: shouldExit ? 'scale(1.05)' : 'scale(1)',
+            transition: 'opacity 0.5s ease-out, transform 0.5s ease-out',
+          }}
+        >
+          <source src="/splash-logo.webm" type="video/webm" />
+          <source src="/splash-logo.mp4" type="video/mp4" />
+        </video>
+      )}
 
       {/* Loader bar below the logo */}
       <div
