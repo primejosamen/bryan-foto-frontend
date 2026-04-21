@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Project } from '@/models';
-import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import { getOptimizedImageUrl } from '@/lib/helpers/image.helpers';
 import GlassChevron from '@/components/ui/GlassChevron';
 
 /* ═══════════════════════ MEDIDAS DEL DISEÑO ═══════════════════ */
@@ -29,45 +29,9 @@ const ROTATION_INTERVAL = 3000;
 const STAGGER_DELAY = 800;
 
 /* Crossfade (CSS transition, no flash) */
-const CROSSFADE_MS = 1400;
+const CROSSFADE_MS = 600;
 
-/* Ken Burns — longer than display time so zoom never fully completes */
-const KB_DURATION_MS = 10000;
-const KB_VARIANT_COUNT = 5;
 
-/* ═══════════════════════ KEYFRAMES CSS ═══════════════════════ */
-const STYLE_ID = 'slot-kenburns-keyframes';
-
-function injectKeyframes() {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(STYLE_ID)) return;
-
-  const style = document.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = `
-    @keyframes kb-v0 {
-      from { transform: scale(1) translate(0%, 0%); }
-      to   { transform: scale(1.08) translate(-1.5%, -1%); }
-    }
-    @keyframes kb-v1 {
-      from { transform: scale(1) translate(0%, 0%); }
-      to   { transform: scale(1.06) translate(1%, -1.5%); }
-    }
-    @keyframes kb-v2 {
-      from { transform: scale(1) translate(0%, 0%); }
-      to   { transform: scale(1.07) translate(-0.5%, 1.2%); }
-    }
-    @keyframes kb-v3 {
-      from { transform: scale(1.06) translate(1%, 0.5%); }
-      to   { transform: scale(1) translate(0%, 0%); }
-    }
-    @keyframes kb-v4 {
-      from { transform: scale(1.05) translate(-1%, -0.8%); }
-      to   { transform: scale(1) translate(0.5%, 0.5%); }
-    }
-  `;
-  document.head.appendChild(style);
-}
 
 /* ═══════════════════════ STAGGER PATTERNS ════════════════════ */
 const STAGGER_PATTERNS = [
@@ -352,8 +316,6 @@ function CoverSlot({
   const frontRef = useRef<'A' | 'B'>('A');
   const prevSafeRef = useRef(safeIndex);
 
-  useEffect(() => injectKeyframes(), []);
-
   useEffect(() => {
     if (safeIndex !== prevSafeRef.current) {
       prevSafeRef.current = safeIndex;
@@ -369,8 +331,6 @@ function CoverSlot({
       }
     }
   }, [safeIndex]);
-
-  const getKbVariant = (tick: number) => (tick + slotIndex) % KB_VARIANT_COUNT;
 
   /* Móvil: ancho pantalla; escritorio: ancho fijo del diseño (evita pedir src enorme en monitores anchos) */
   const sizeStr = fullWidth
@@ -390,24 +350,20 @@ function CoverSlot({
           zIndex: isFront ? 2 : 1,
         }}
       >
-        <div
-          key={`kb-${layer.tick}`}
-          className="absolute inset-0"
-          style={{
-            animation: `kb-v${getKbVariant(layer.tick)} ${KB_DURATION_MS}ms ease-out both`,
-            willChange: 'transform',
-          }}
-        >
+        {/* Only mount <Image> for the front layer; back layer stays as
+            an empty div so the CSS opacity transition has a target,
+            but we avoid decoding an invisible image. */}
+        {isFront && (
           <Image
-            src={getStrapiImageUrl(project.foto_portada)}
+            src={getOptimizedImageUrl(project.foto_portada, 800)}
             alt={project.titulo}
             fill
             className="object-cover"
             sizes={sizeStr}
-            quality={100}
+            quality={80}
             priority={slotIndex < 3 || fullWidth}
           />
-        </div>
+        )}
       </div>
     );
   };

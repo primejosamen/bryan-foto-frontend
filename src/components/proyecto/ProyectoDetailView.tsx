@@ -10,7 +10,7 @@ import {
   AnimatePresence,
 } from 'framer-motion';
 import type { Project, StrapiImage } from '@/models';
-import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import { getOptimizedImageUrl } from '@/lib/helpers/image.helpers';
 import GlassNavBar from '@/components/ui/GlassNavBar';
 import GlassChevron from '@/components/ui/GlassChevron';
 import BackButton from '@/components/ui/BackButton';
@@ -58,7 +58,7 @@ function PhotoCard({
         style={{ y }}
       >
         <Image
-          src={getStrapiImageUrl(foto)}
+          src={getOptimizedImageUrl(foto, 1200)}
           alt={`${titulo} — ${index + 1}`}
           fill
           className="object-contain"
@@ -121,7 +121,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
 
     candidates.forEach((i) => {
       const img = new window.Image();
-      img.src = getStrapiImageUrl(todasLasFotos[i]);
+      img.src = getOptimizedImageUrl(todasLasFotos[i], 1200);
     });
   }, [activeIndex, todasLasFotos]);
 
@@ -253,7 +253,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                     >
                       <div className="relative w-full h-full">
                         <Image
-                          src={getStrapiImageUrl(foto)}
+                          src={getOptimizedImageUrl(foto, 260)}
                           alt={`Miniatura ${i + 1}`}
                           fill
                           className="object-cover"
@@ -315,7 +315,7 @@ export default function ProyectoDetailView({ proyecto }: Props) {
                 >
                   <div className="relative w-full h-full">
                     <Image
-                      src={getStrapiImageUrl(foto)}
+                      src={getOptimizedImageUrl(foto, 1800)}
                       alt={`${proyecto.titulo} — ${lightboxIndex + 1}`}
                       fill
                       className="object-contain"

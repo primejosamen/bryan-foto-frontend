@@ -7,7 +7,7 @@
 import type { ContactInfo } from '@/models';
 import { strapiGet } from './strapi-client';
 
-/** Fetches contact information (email, phone, social, location) */
+/** Fetches contact information (backend applies selective populate) */
 export async function getContact(): Promise<ContactInfo | null> {
-  return strapiGet<ContactInfo>('/api/contacto?populate=*');
+  return strapiGet<ContactInfo>('/api/contacto');
 }

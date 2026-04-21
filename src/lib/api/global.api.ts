@@ -7,7 +7,7 @@
 import type { GlobalConfig } from '@/models';
 import { strapiGet } from './strapi-client';
 
-/** Fetches global site configuration (name, description, favicon) */
+/** Fetches global site configuration (backend applies selective populate) */
 export async function getGlobalConfig(): Promise<GlobalConfig | null> {
-  return strapiGet<GlobalConfig>('/api/global?populate=*');
+  return strapiGet<GlobalConfig>('/api/global');
 }

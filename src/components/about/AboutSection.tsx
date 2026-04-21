@@ -15,7 +15,7 @@ import type { About } from '@/models';
 import type { ContactInfo } from '@/models';
 import GlassNavBar from '@/components/ui/GlassNavBar';
 import BackButton from '@/components/ui/BackButton';
-import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import { getOptimizedImageUrl } from '@/lib/helpers/image.helpers';
 import LogoAbout3D from '@/components/ui/LogoAbout3D';
 
 //#region Types
@@ -130,7 +130,7 @@ export default function AboutSection({ about, contacto }: AboutSectionProps) {
                 className="relative aspect-4/5"
               >
                 <Image
-                  src={getStrapiImageUrl(block.file)}
+                  src={getOptimizedImageUrl(block.file, 1000)}
                   alt="About image"
                   fill
                   className="object-cover"

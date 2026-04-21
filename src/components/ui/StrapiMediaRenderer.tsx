@@ -9,7 +9,7 @@
 
 import Image from 'next/image';
 import type { StrapiMedia } from '@/models';
-import { getStrapiImageUrl, isVideo, isGif } from '@/lib/helpers/image.helpers';
+import { getOptimizedImageUrl, isVideo, isGif } from '@/lib/helpers/image.helpers';
 
 interface Props {
   media: StrapiMedia;
@@ -19,6 +19,7 @@ interface Props {
   fill?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  priority?: boolean;
 }
 
 export default function StrapiMediaRenderer({
@@ -29,8 +30,9 @@ export default function StrapiMediaRenderer({
   fill = true,
   className = '',
   style,
+  priority = false,
 }: Props) {
-  const url = getStrapiImageUrl(media);
+  const url = getOptimizedImageUrl(media, 1200);
 
   if (isVideo(media)) {
     return (
@@ -77,6 +79,7 @@ export default function StrapiMediaRenderer({
       style={{ objectFit: 'cover', ...style }}
       sizes={sizes}
       quality={quality}
+      priority={priority}
     />
   );
 }

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { StrapiMedia } from '@/models';
 import StrapiMediaRenderer from '@/components/ui/StrapiMediaRenderer';
 import GlassChevron from '@/components/ui/GlassChevron';
+import { getOptimizedImageUrl } from '@/lib/helpers/image.helpers';
 
 interface Props {
   images: StrapiMedia | StrapiMedia[];
@@ -29,6 +30,19 @@ export default function ImageCarousel({
   const [direction, setDirection] = useState(0); // -1 prev, 1 next
 
   const hasMultiple = images.length > 1;
+
+  // Preload adjacent images so transitions are instant
+  useEffect(() => {
+    if (!hasMultiple) return;
+    const adjacentIndices = [
+      (idx + 1) % images.length,
+      (idx - 1 + images.length) % images.length,
+    ];
+    adjacentIndices.forEach((i) => {
+      const img = new window.Image();
+      img.src = getOptimizedImageUrl(images[i], 1200);
+    });
+  }, [idx, images, hasMultiple]);
 
   const prev = useCallback(
     (e: React.MouseEvent) => {

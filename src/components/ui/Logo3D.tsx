@@ -20,17 +20,18 @@ const HEADER_H_MOBILE  = 120;
 /* ─────────────────────────────────────────────
    LogoScene — SOLO el logo GRANDE para el HOME
    ───────────────────────────────────────────── */
-function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollProgress: React.RefObject<number> }) {
+function LogoScene({ input, scrollProgress, onReady }: { input: SceneInputState; scrollProgress: React.RefObject<number>; onReady?: () => void }) {
   const groupRef = useRef<THREE.Group>(null);
   const matsRef = useRef<THREE.ShaderMaterial[]>([]);
   const logoCenterRef = useRef(new THREE.Vector3());
   const baseScaleRef = useRef(1);
   const currentScaleRef = useRef(1);
+  const readyFiredRef = useRef(false);
 
-  /* ── Intro animation: slow cinematic sweep + gentle spin ── */
-  const INTRO_DELAY    = 0.5;          // wait for scene to settle
-  const SWEEP_DURATION = 3.0;          // phase 1: -45° → 0°
-  const SPIN_DURATION  = 3.0;          // phase 2: slow 180° rotation
+  /* ── Intro animation: quick sweep + gentle spin ── */
+  const INTRO_DELAY    = 0.15;         // wait for scene to settle
+  const SWEEP_DURATION = 1.0;          // phase 1: -45° → 0°
+  const SPIN_DURATION  = 1.2;          // phase 2: slow 360° rotation
   const introStartRef  = useRef(-1);   // -1 = not started yet
   const introDoneRef   = useRef(false);
   const frameCountRef  = useRef(0);    // skip first frames (GPU init)
@@ -187,6 +188,12 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
   // Tick
   const persp = camera as THREE.PerspectiveCamera;
   useFrame(() => {
+    // Signal ready after a few frames (shader compiled, logo visible)
+    if (!readyFiredRef.current && frameCountRef.current >= 3) {
+      readyFiredRef.current = true;
+      onReady?.();
+    }
+
     const c = logoCenterRef.current;
 
     if (!input.isOrbiting) {
@@ -343,7 +350,7 @@ function LogoScene({ input, scrollProgress }: { input: SceneInputState; scrollPr
 /* ─────────────────────────────────────────────
    Logo3D — Componente exportado (HOME)
    ───────────────────────────────────────────── */
-export default function Logo3D() {
+export default function Logo3D({ onReady }: { onReady?: () => void } = {}) {
   const inputRef = useRef<SceneInputState | null>(null);
   if (!inputRef.current) inputRef.current = createInputState();
   const input = inputRef.current;
@@ -411,7 +418,7 @@ export default function Logo3D() {
           }}
           dpr={[1, 2]}
         >
-          <LogoScene input={input} scrollProgress={scrollProgressRef} />
+          <LogoScene input={input} scrollProgress={scrollProgressRef} onReady={onReady} />
         </Canvas>
       </div>
 

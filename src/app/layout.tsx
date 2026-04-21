@@ -1,9 +1,14 @@
 // src/app/layout.tsx
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import { IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { getGlobalConfig } from '@/lib/api';
 import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
+import SharedCanvas from '@/components/ui/SharedCanvas';
+
+// Deduplicate getGlobalConfig across generateMetadata + RootLayout
+const getCachedGlobalConfig = cache(() => getGlobalConfig());
 
 // Tipografía IBM Plex Sans según el diseño
 const ibmPlexSans = IBM_Plex_Sans({
@@ -14,7 +19,7 @@ const ibmPlexSans = IBM_Plex_Sans({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const global = await getGlobalConfig();
+  const global = await getCachedGlobalConfig();
 
   const faviconUrl = global?.favicon ? getStrapiImageUrl(global.favicon) : '/favicon.ico';
 
@@ -32,12 +37,14 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const global = await getGlobalConfig();
+  const global = await getCachedGlobalConfig();
 
   return (
     <html lang="es" className={ibmPlexSans.variable}>
       <body className="bg-white text-white antialiased">
-        <main>{children}</main>
+        <SharedCanvas>
+          <main>{children}</main>
+        </SharedCanvas>
       </body>
     </html>
   );
