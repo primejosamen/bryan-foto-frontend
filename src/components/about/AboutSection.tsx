@@ -15,7 +15,7 @@ import type { About } from '@/models';
 import type { ContactInfo } from '@/models';
 import GlassNavBar from '@/components/ui/GlassNavBar';
 import BackButton from '@/components/ui/BackButton';
-import { getOptimizedImageUrl } from '@/lib/helpers/image.helpers';
+import { getStrapiImageUrl } from '@/lib/helpers/image.helpers';
 import LogoAbout3D from '@/components/ui/LogoAbout3D';
 
 //#region Types
@@ -72,7 +72,7 @@ export default function AboutSection({ about, contacto }: AboutSectionProps) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="col-start-1 md:col-start-3 self-end font-ibm-mono text-[clamp(1.5rem,2.5vw,32px)] font-bold leading-tight tracking-[-0.085em] pointer-events-auto pt-16 md:pt-8 text-red-500 px-2"
+          className="col-start-1 md:col-start-3 self-end font-ibm-mono text-[clamp(1.2rem,2vw,26px)] font-bold leading-tight tracking-[-0.085em] pointer-events-auto pt-16 md:pt-8 text-red-500 px-2"
         >
           {about.title}
         </motion.h1>
@@ -85,7 +85,7 @@ export default function AboutSection({ about, contacto }: AboutSectionProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-              className="font-ibm-mono text-[clamp(0.75rem,1vw,16px)] leading-relaxed font-normal tracking-[-0.05em] flex flex-col gap-4"
+              className="font-ibm-mono text-[clamp(0.65rem,0.85vw,14px)] leading-relaxed font-normal tracking-[-0.05em] flex flex-col gap-4"
             >
               {block.body
                 ?.split(/(?<=\.)\s+/)
@@ -130,7 +130,7 @@ export default function AboutSection({ about, contacto }: AboutSectionProps) {
                 className="relative aspect-4/5"
               >
                 <Image
-                  src={getOptimizedImageUrl(block.file, 1000)}
+                  src={getStrapiImageUrl(block.file)}
                   alt="About image"
                   fill
                   className="object-cover"
