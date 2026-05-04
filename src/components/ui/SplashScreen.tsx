@@ -20,6 +20,36 @@ export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
     setIsMobile(window.innerWidth < 768);
   }, []);
 
+  // Programmatic play for in-app browsers (Instagram, etc.)
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+
+    v.muted = true;
+    v.play().catch(() => {});
+
+    const onReady = () => {
+      v.muted = true;
+      if (v.paused) v.play().catch(() => {});
+    };
+    v.addEventListener('canplay', onReady);
+    v.addEventListener('loadeddata', onReady);
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible' && v.paused) {
+        v.muted = true;
+        v.play().catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      v.removeEventListener('canplay', onReady);
+      v.removeEventListener('loadeddata', onReady);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [isMobile]);
+
   // Ensure splash stays at least minDisplayMs
   useEffect(() => {
     const t = setTimeout(() => setMinTimePassed(true), minDisplayMs);
@@ -62,6 +92,7 @@ export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
           loop
           muted
           playsInline
+          preload="auto"
           style={{
             width: 'min(60vw, 480px)',
             height: 'auto',

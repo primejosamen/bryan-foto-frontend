@@ -10,6 +10,7 @@
 import Image from 'next/image';
 import type { StrapiMedia } from '@/models';
 import { getOptimizedImageUrl, isVideo, isGif } from '@/lib/helpers/image.helpers';
+import AutoPlayVideo from '@/components/ui/AutoPlayVideo';
 
 interface Props {
   media: StrapiMedia;
@@ -36,12 +37,8 @@ export default function StrapiMediaRenderer({
 
   if (isVideo(media)) {
     return (
-      <video
+      <AutoPlayVideo
         src={url}
-        autoPlay
-        loop
-        muted
-        playsInline
         className={className}
         style={{
           width: '100%',

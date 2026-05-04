@@ -11,6 +11,7 @@ import Image from 'next/image';
 import type { StrapiMedia, StrapiBlock } from '@/models';
 import { STRAPI_URL } from '@/config/constants';
 import { renderBlocks } from '@/lib/helpers/rich-text.helpers';
+import AutoPlayVideo from '@/components/ui/AutoPlayVideo';
 import ScrollReveal from './ScrollReveal';
 
 const SLOT_W = 472;
@@ -65,12 +66,8 @@ export default function HomeEditorialGift({ text, media }: Props) {
           className="w-full flex justify-center items-start"
         >
           {video ? (
-            <video
+            <AutoPlayVideo
               src={url}
-              autoPlay
-              loop
-              muted
-              playsInline
               className="w-full"
               style={{
                 aspectRatio: `${SLOT_W} / ${MEDIA_H}`,
