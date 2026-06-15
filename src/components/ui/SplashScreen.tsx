@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 interface Props {
   /** When true, the splash begins its exit animation */
@@ -9,16 +9,30 @@ interface Props {
   minDisplayMs?: number;
 }
 
+function subscribeToViewport(onStoreChange: () => void): () => void {
+  window.addEventListener('resize', onStoreChange);
+  return () => window.removeEventListener('resize', onStoreChange);
+}
+
+function getShowAnimatedLogoSnapshot(): boolean {
+  const userAgent = navigator.userAgent;
+  const isMacOSSafari =
+    /Macintosh|Mac OS X/.test(userAgent) &&
+    /Safari/.test(userAgent) &&
+    !/Chrome|Chromium|CriOS|FxiOS|Firefox|Edg|OPR/.test(userAgent);
+
+  return window.innerWidth >= 768 && !isMacOSSafari;
+}
+
 export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
   const [minTimePassed, setMinTimePassed] = useState(false);
   const [visible, setVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const showAnimatedLogo = useSyncExternalStore(
+    subscribeToViewport,
+    getShowAnimatedLogoSnapshot,
+    () => null,
+  );
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Hide video on mobile — MP4 has no alpha and WebM alpha is broken on iOS
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-  }, []);
 
   // Programmatic play for in-app browsers (Instagram, etc.)
   useEffect(() => {
@@ -48,7 +62,7 @@ export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
       v.removeEventListener('loadeddata', onReady);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [isMobile]);
+  }, [showAnimatedLogo]);
 
   // Ensure splash stays at least minDisplayMs
   useEffect(() => {
@@ -84,8 +98,8 @@ export default function SplashScreen({ ready, minDisplayMs = 1200 }: Props) {
         pointerEvents: shouldExit ? 'none' : 'auto',
       }}
     >
-      {/* Animated 3D logo — desktop only (hidden until we know the device) */}
-      {isMobile === false && (
+      {/* Animated splash logo — desktop except macOS Safari */}
+      {showAnimatedLogo === true && (
         <video
           ref={videoRef}
           autoPlay
